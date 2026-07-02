@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: ai-radar-backend
+
+server:
+  port: 8080
