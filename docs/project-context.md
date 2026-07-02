@@ -191,12 +191,21 @@ source_config
 
 ## 当前阶段边界
 
-Phase 1 已建立后端骨架、数据库迁移基础、第一条数据流的表结构初稿和 API 契约。当前仍不实现：
+Phase 1 已完成后端与数据库基础。Phase 2 正在用 Hacker News 跑通第一条真实数据闭环，当前已实现：
 
-- `source_config`、`crawl_task`、`raw_item` 等业务模块代码。
-- arXiv、Hacker News 或 GitHub 采集器。
-- 标准化、聚类和评分算法。
-- Phase 2 契约中尚未实现的业务 API。
+- Hacker News Top Stories 数据源配置和同步手动采集。
+- `crawl_task` 生命周期、计数、幂等键和逐条失败记录。
+- 每次采集的 `raw_item` 快照，以及命中关键词内容的 `hot_item` 标准化。
+- 基于规范化 URL 的确定性聚类和单条事件兜底。
+- 带版本和分项的追加式 `hot_score`。
+- 热点列表和热点详情 API。
+
+当前仍不实现：
+
+- Hacker News 评论树和外链正文抓取。
+- arXiv 与 GitHub 采集器。
+- 定时调度、异步任务队列和自动任务重试。
+- embedding 或 LLM 聚类、LLM 结构化分析。
 - Vue 或 React 前端。
-- LLM、订阅、告警、日报和评测。
+- 订阅、告警、日报和完整评测体系。
 - Redis、Kafka、XXL-JOB、Milvus、Elasticsearch 等非必要基础设施。

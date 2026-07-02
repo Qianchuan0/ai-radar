@@ -2,9 +2,9 @@
 
 ## Scope
 
-Phase 1 establishes the backend, database, migration, configuration, logging,
-and API contract foundations. It does not implement source management, crawling,
-normalization, clustering, scoring, or hot cluster query use cases.
+Phase 1 established the backend, database, migration, configuration, logging,
+and API contract foundations. Phase 2 now implements the first Hacker News
+closed loop on top of those boundaries.
 
 ## Runtime
 
@@ -47,6 +47,10 @@ override them and must not commit secrets.
 | `AI_RADAR_LOG_LEVEL` | `INFO` | Application package log level |
 | `SERVER_PORT` | `8080` | HTTP port |
 | `AI_RADAR_POSTGRES_PORT` | `5432` | Local container host port |
+| `AI_RADAR_HN_BASE_URL` | `https://hacker-news.firebaseio.com/v0` | Hacker News API base URL |
+| `AI_RADAR_HN_CONNECT_TIMEOUT` | `3s` | Hacker News connection timeout |
+| `AI_RADAR_HN_READ_TIMEOUT` | `5s` | Hacker News response timeout |
+| `AI_RADAR_HN_MAX_ATTEMPTS` | `2` | Maximum attempts for retryable upstream failures |
 
 Source API tokens and credentials must be injected through environment variables
 or a future secret manager. They must not be stored in `source_config.config_payload`.
@@ -77,14 +81,15 @@ Rules:
 
 ## API Contract
 
-The Phase 1 contract is:
+The initial contract, now aligned with the Phase 2 implementation, is:
 
 ```text
 docs/api/phase-one-openapi.yaml
 ```
 
-Only `GET /api/health` is implemented in Phase 1. Other paths describe the
-Phase 2 boundary and must not be reported as available until implemented and tested.
+The health, source configuration, synchronous manual crawl, crawl task query,
+hot cluster list, and hot cluster detail paths are implemented. The manual crawl
+response is terminal because Phase 2 deliberately keeps execution synchronous.
 
 ## Persistence Boundaries
 

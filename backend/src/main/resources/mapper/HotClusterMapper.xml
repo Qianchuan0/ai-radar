@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.airadar.cluster.mapper.HotClusterMapper">
+
+    <sql id="activeClusterFrom">
+        FROM hot_cluster hc
+        WHERE hc.status = 'ACTIVE'
+        <if test="sourceType != null">
+            AND EXISTS (
+                SELECT 1
+                FROM hot_cluster_item hci
+                JOIN hot_item hi ON hi.id = hci.hot_item_id
+                WHERE hci.hot_cluster_id = hc.id
+                  AND hci.removed_at IS NULL
+                  AND hi.source_type = #{sourceType}
+            )
+        </if>
+        <if test="from != null">
+            AND hc.last_seen_at &gt;= #{from}
+        </if>
+        <if test="to != null">
+            AND hc.last_seen_at &lt;= #{to}
+        </if>
+    </sql>
+
+    <select id="selectActivePage" resultType="com.airadar.cluster.entity.HotClusterEntity">
+        SELECT hc.*
+        <include refid="activeClusterFrom"/>
+        ORDER BY hc.last_seen_at DESC, hc.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countActive" resultType="long">
+        SELECT COUNT(*)
+        <include refid="activeClusterFrom"/>
+    </select>
+
+</mapper>

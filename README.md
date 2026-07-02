@@ -71,4 +71,4 @@ GET http://localhost:8080/api/health
 
 ## 当前状态
 
-**Backend foundation implemented / Phase 1 awaiting acceptance**
+**Phase 1 completed / Phase 2 data flow implemented and awaiting acceptance**
