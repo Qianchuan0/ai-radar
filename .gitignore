@@ -1,3 +1,13 @@
 # Local learning and tutoring artifacts
 sigma/
 
+# Unrelated local experiment artifacts
+brain_alpha_pipeline/
+runtime_sa_top1000_slow_factors/
+runtime_usa_top1000_slow_factors/
+config.sa_slow_factors.json
+config.usa_slow_factors.json
+test_all_regions.py
+test_sa_datasets.py
+test_sa_params.py
+test_neutralizations.py

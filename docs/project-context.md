@@ -159,15 +159,22 @@ source_config
 
 ## 计划技术栈
 
-以下为候选方案，并不代表全部已经接受：
+当前已接受的基础选型：
 
-- 后端：Java 17+、Spring Boot 3、Spring Security、MyBatis-Plus。
-- 数据库：PostgreSQL、MySQL，或需要向量检索时使用 PostgreSQL + pgvector。
-- 缓存：Redis。
-- 任务调度：Spring Scheduler、Quartz 或后续评估的任务平台。
-- LLM 集成：Spring AI 或 LangChain4j。
-- 前端：Vue 3 或 React、TypeScript、组件库、图表和 Markdown 渲染。
-- 部署：Docker Compose、Nginx、前后端服务及数据库。
+- 后端：Java 17、Spring Boot 3.5.15、MyBatis-Plus。
+- 数据库：PostgreSQL，使用 Flyway 管理版本化 SQL 迁移。
+- API 契约：OpenAPI 3.1。
+- 本地数据库：Docker Compose。
+- 聚类基线：确定性去重与规则聚类。
+- 评分基线：保存分项与版本的可解释规则评分。
+
+当前延后决定：
+
+- pgvector：等规则聚类基线和标注样本能够量化收益后评估。
+- Redis：等出现已测量的缓存或分布式协调需求后评估。
+- 调度：第一条闭环只做手动采集，周期采集出现后优先评估 Spring Scheduler。
+- LLM 集成：在 Phase 5 前比较 Spring AI 和 LangChain4j。
+- 前端：在 Phase 3 前确定 Vue 3 或 React，统一使用 TypeScript。
 
 最终选型必须与 `docs/decision-log.md` 和实际 ADR 保持一致。
 
@@ -182,17 +189,14 @@ source_config
 - 外部调用必须可观测，并具备失败记录和重试设计。
 - 技术选型服务于当前规模，不提前引入重型基础设施。
 
-## 当前阶段不做什么
+## 当前阶段边界
 
-Phase 0 只初始化仓库结构和文档骨架，当前不做：
+Phase 1 已建立后端骨架、数据库迁移基础、第一条数据流的表结构初稿和 API 契约。当前仍不实现：
 
-- 不初始化 Spring Boot。
-- 不初始化 Vue 或 React。
-- 不设计或创建实际数据库表。
-- 不编写采集、标准化、聚类、评分等业务代码。
-- 不接入 LLM。
-- 不实现订阅、告警、日报或评测。
-- 不创建 `docker-compose.yml`。
-- 不引入 Kafka、XXL-JOB、Milvus、Elasticsearch 等重型组件。
-- 不创建尚未真实发生的重要技术决策 ADR。
-
+- `source_config`、`crawl_task`、`raw_item` 等业务模块代码。
+- arXiv、Hacker News 或 GitHub 采集器。
+- 标准化、聚类和评分算法。
+- Phase 2 契约中尚未实现的业务 API。
+- Vue 或 React 前端。
+- LLM、订阅、告警、日报和评测。
+- Redis、Kafka、XXL-JOB、Milvus、Elasticsearch 等非必要基础设施。

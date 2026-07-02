@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ai_radar
+      POSTGRES_USER: ai_radar
+      POSTGRES_PASSWORD: ai_radar
+    ports:
+      - "${AI_RADAR_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ai-radar-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_radar -d ai_radar"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  ai-radar-postgres-data:

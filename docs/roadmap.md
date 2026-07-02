@@ -2,7 +2,7 @@
 
 ## Phase 0: Project Initialization
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -19,7 +19,7 @@
 
 ## Phase 1: Backend Foundation
 
-**Status:** Planned
+**Status:** In Progress
 
 ### Goals
 
@@ -153,4 +153,3 @@
 - 结构化分析人工评分。
 - 告警 precision、recall 和误报率。
 - 评测报告与错误案例分析。
-
