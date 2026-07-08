@@ -1,5 +1,6 @@
 package com.airadar.crawl;
 
+import com.airadar.cluster.model.HotClusterSort;
 import com.airadar.cluster.service.HotClusterQueryService;
 import com.airadar.cluster.vo.HotClusterDetailVO;
 import com.airadar.common.api.PageResponse;
@@ -128,7 +129,14 @@ class HackerNewsDataFlowIntegrationTest {
         assertThat(count("hot_score")).isEqualTo(2);
         assertThat(count("crawl_task")).isEqualTo(1);
 
-        PageResponse<?> page = hotClusterQueryService.list(1, 20, SourceType.HACKER_NEWS, null, null);
+        PageResponse<?> page = hotClusterQueryService.list(
+                1,
+                20,
+                HotClusterSort.SCORE_DESC,
+                SourceType.HACKER_NEWS,
+                null,
+                null
+        );
         assertThat(page.totalElements()).isEqualTo(1);
         HotClusterDetailVO detail = hotClusterQueryService.get(
                 jdbcTemplate.queryForObject("SELECT id FROM hot_cluster", Long.class)

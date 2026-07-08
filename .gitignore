@@ -11,3 +11,12 @@ test_all_regions.py
 test_sa_datasets.py
 test_sa_params.py
 test_neutralizations.py
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/*.log
+
+# Local runtime logs
+backend/*.log

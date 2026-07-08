@@ -1,0 +1,62 @@
+import { describe, expect, it } from "vitest";
+import {
+    buildHotClusterQuery,
+    parseHotClusterFilters,
+    resetHotClusterFilters,
+    toHotClusterListQuery
+} from "./query";
+
+describe("hot cluster query helpers", () => {
+    it("parses defaults when the query is empty", () => {
+        expect(parseHotClusterFilters({})).toEqual({
+            page: 1,
+            size: 12,
+            sort: "SCORE_DESC",
+            sourceType: undefined,
+            from: undefined,
+            to: undefined,
+            q: "",
+            minScore: 0
+        });
+    });
+
+    it("builds and converts a query payload", () => {
+        const filters = {
+            page: 2,
+            size: 24,
+            sort: "LATEST" as const,
+            sourceType: "HACKER_NEWS" as const,
+            from: "2026-07-03T10:00",
+            to: "2026-07-03T18:00",
+            q: "agent",
+            minScore: 42
+        };
+
+        expect(buildHotClusterQuery(filters)).toEqual({
+            page: "2",
+            size: "24",
+            sort: "LATEST",
+            sourceType: "HACKER_NEWS",
+            from: "2026-07-03T10:00",
+            to: "2026-07-03T18:00",
+            q: "agent",
+            minScore: "42"
+        });
+        expect(toHotClusterListQuery(filters)).toEqual({
+            page: 2,
+            size: 24,
+            sort: "LATEST",
+            sourceType: "HACKER_NEWS",
+            from: new Date("2026-07-03T10:00").toISOString(),
+            to: new Date("2026-07-03T18:00").toISOString()
+        });
+    });
+
+    it("creates an isolated reset payload", () => {
+        const first = resetHotClusterFilters();
+        const second = resetHotClusterFilters();
+        first.page = 9;
+
+        expect(second.page).toBe(1);
+    });
+});

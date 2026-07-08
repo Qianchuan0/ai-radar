@@ -1,5 +1,6 @@
 package com.airadar.cluster.controller;
 
+import com.airadar.cluster.model.HotClusterSort;
 import com.airadar.cluster.service.HotClusterQueryService;
 import com.airadar.cluster.vo.HotClusterDetailVO;
 import com.airadar.cluster.vo.HotClusterSummaryVO;
@@ -33,11 +34,12 @@ public class HotClusterController {
     public ApiResponse<PageResponse<HotClusterSummaryVO>> list(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "SCORE_DESC") HotClusterSort sort,
             @RequestParam(required = false) SourceType sourceType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to
     ) {
-        return ApiResponse.success(hotClusterQueryService.list(page, size, sourceType, from, to));
+        return ApiResponse.success(hotClusterQueryService.list(page, size, sort, sourceType, from, to));
     }
 
     @GetMapping("/{clusterId}")

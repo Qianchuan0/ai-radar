@@ -28,7 +28,19 @@
     <select id="selectActivePage" resultType="com.airadar.cluster.entity.HotClusterEntity">
         SELECT hc.*
         <include refid="activeClusterFrom"/>
-        ORDER BY hc.last_seen_at DESC, hc.id DESC
+        ORDER BY
+        <choose>
+            <when test="sort == 'SCORE_DESC'">
+                COALESCE((
+                    SELECT hs.total_score
+                    FROM hot_score hs
+                    WHERE hs.hot_cluster_id = hc.id
+                    ORDER BY hs.calculated_at DESC, hs.id DESC
+                    LIMIT 1
+                ), 0) DESC,
+            </when>
+        </choose>
+        hc.last_seen_at DESC, hc.id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 

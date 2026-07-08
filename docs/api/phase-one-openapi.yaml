@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: AI Radar First Data Flow API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     Implemented contract for the first AI Radar data flow. Manual crawling is
     synchronous in Phase 2, so its response contains the terminal task state.
@@ -184,6 +184,13 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+        - name: sort
+          in: query
+          description: Ranking strategy for the hot cluster list.
+          schema:
+            type: string
+            enum: [SCORE_DESC, LATEST]
+            default: SCORE_DESC
         - name: sourceType
           in: query
           schema:

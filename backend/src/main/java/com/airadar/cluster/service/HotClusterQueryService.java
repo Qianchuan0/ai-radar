@@ -4,6 +4,7 @@ import com.airadar.cluster.entity.HotClusterEntity;
 import com.airadar.cluster.entity.HotClusterItemEntity;
 import com.airadar.cluster.mapper.HotClusterItemMapper;
 import com.airadar.cluster.mapper.HotClusterMapper;
+import com.airadar.cluster.model.HotClusterSort;
 import com.airadar.cluster.vo.HotClusterDetailVO;
 import com.airadar.cluster.vo.HotClusterSummaryVO;
 import com.airadar.cluster.vo.HotItemEvidenceVO;
@@ -50,6 +51,7 @@ public class HotClusterQueryService {
     public PageResponse<HotClusterSummaryVO> list(
             int page,
             int size,
+            HotClusterSort sort,
             SourceType sourceType,
             Instant from,
             Instant to
@@ -57,7 +59,7 @@ public class HotClusterQueryService {
         long total = hotClusterMapper.countActive(sourceType, from, to);
         long offset = (long) (page - 1) * size;
         List<HotClusterSummaryVO> items = hotClusterMapper
-                .selectActivePage(sourceType, from, to, size, offset)
+                .selectActivePage(sourceType, from, to, sort.name(), size, offset)
                 .stream()
                 .map(this::toSummary)
                 .toList();
