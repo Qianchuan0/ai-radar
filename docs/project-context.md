@@ -37,6 +37,7 @@ multi-source collection
 -> hot-cluster APIs
 -> frontend list/detail pages
 -> structured analysis
+-> subscription matching and alert review
 -> later alerting, reporting, evaluation
 ```
 
@@ -101,6 +102,8 @@ Current Phase 4 fields:
 6. explainable hot scoring
 7. hot-cluster list/detail APIs
 8. frontend ranking page, detail page, and page states
+9. manual subscription matching and alert review page
+10. manual daily report generation and report history page
 
 ## Phase 1 Minimal Closed Loop
 
@@ -163,6 +166,7 @@ Stores the explainable score history for a cluster, including total score, compo
 - `raw_item` must stay available for traceability and evaluation
 - LLMs cannot be the sole decision maker for clustering or scoring
 - structured analysis must stay evidence-grounded and persist every run outcome
+- subscription matching should stay traceable with persisted rules, match reasons, and suppression behavior
 - important technical decisions must be reflected in the decision log or ADRs
 - avoid heavy infrastructure before the product proves the need
 
@@ -170,4 +174,4 @@ Stores the explainable score history for a cluster, including total score, compo
 
 - scheduled orchestration and heavy job infrastructure
 - embedding or LLM clustering
-- subscriptions, alerts, daily reports, and full evaluation workflows
+- external alert delivery channels, scheduler-driven matching, scheduled report delivery, and full evaluation workflows

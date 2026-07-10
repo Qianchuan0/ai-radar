@@ -21,6 +21,16 @@ const router = createRouter({
             path: "/clusters/:clusterId",
             name: "cluster-detail",
             component: () => import("../pages/HotClusterDetailPage.vue")
+        },
+        {
+            path: "/alerts",
+            name: "alerts",
+            component: () => import("../pages/AlertsPage.vue")
+        },
+        {
+            path: "/reports/daily",
+            name: "daily-reports",
+            component: () => import("../pages/DailyReportsPage.vue")
         }
     ]
 });

@@ -18,6 +18,8 @@ This file captures short accepted decisions. Larger decisions with context, opti
 12. The final Phase 3 frontend runs as direct Vue routes instead of `iframe`-wrapped static demo pages.
 13. Local text query and minimum-score filtering are explicit frontend display filters, not backend business fields.
 14. The first Phase 5 structured analysis path is synchronous, evidence-grounded, and stored in `cluster_analysis` with every success or failure recorded.
+15. The first Phase 6 alert path is manual, synchronous, and stored in `subscription_rule` plus `alert_record` before introducing scheduler infrastructure or external delivery channels.
+16. The first Phase 7 daily report path is manual, synchronous, and generated from persisted `hot_cluster`, `hot_score`, evidence, and the latest stored `cluster_analysis` before introducing scheduler infrastructure or new model calls.
 
 ## Pending Decisions
 
@@ -26,6 +28,8 @@ This file captures short accepted decisions. Larger decisions with context, opti
 3. Which real LLM provider or framework should replace the Phase 5 fake model client.
 4. When global frontend state is large enough to justify Pinia.
 5. When aggregate analytics APIs justify charts or dashboards.
+6. Which delivery channel should be introduced first after the manual Phase 6 alert baseline.
+7. When daily report generation should move from manual runs to scheduled delivery.
 
 ## ADR Index
 

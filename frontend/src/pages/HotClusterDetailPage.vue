@@ -9,8 +9,8 @@
       <nav class="nav" aria-label="主导航">
         <RouterLink class="nav-item active" :to="{ name: 'clusters', query: listQuery }">热点榜单</RouterLink>
         <div class="nav-item">数据源</div>
-        <div class="nav-item">订阅告警</div>
-        <div class="nav-item">日报</div>
+        <RouterLink class="nav-item" :to="{ name: 'alerts' }">订阅告警</RouterLink>
+        <RouterLink class="nav-item" :to="{ name: 'daily-reports' }">日报</RouterLink>
         <div class="nav-item">评测</div>
       </nav>
 

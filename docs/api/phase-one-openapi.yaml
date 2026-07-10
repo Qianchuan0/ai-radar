@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: AI Radar First Data Flow API
-  version: 0.5.0
+  version: 0.7.0
   description: |
     Implemented contract for the first AI Radar data flow. Manual crawling is
     synchronous in Phase 2, so its response contains the terminal task state.
@@ -13,6 +13,9 @@ tags:
   - name: Crawl Tasks
   - name: Hot Clusters
   - name: Analysis
+  - name: Subscriptions
+  - name: Alerts
+  - name: Reports
 paths:
   /api/health:
     get:
@@ -280,6 +283,242 @@ paths:
                 $ref: "#/components/schemas/ClusterAnalysisResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/subscriptions:
+    post:
+      tags: [Subscriptions]
+      summary: Create a subscription rule
+      operationId: createSubscription
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubscriptionRequest"
+      responses:
+        "201":
+          description: Subscription rule created
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      tags: [Subscriptions]
+      summary: List subscription rules
+      operationId: listSubscriptions
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Subscription rules returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionListResponse"
+  /api/v1/subscriptions/{subscriptionId}/status:
+    patch:
+      tags: [Subscriptions]
+      summary: Enable or disable a subscription rule
+      operationId: updateSubscriptionStatus
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/SubscriptionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSubscriptionStatusRequest"
+      responses:
+        "200":
+          description: Subscription rule updated
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/alerts/matching-runs:
+    post:
+      tags: [Alerts]
+      summary: Run one manual alert matching pass
+      operationId: runAlertMatching
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Alert matching completed and returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertMatchingRunResponse"
+  /api/v1/alerts:
+    get:
+      tags: [Alerts]
+      summary: List alert records
+      operationId: listAlerts
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: subscriptionId
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/AlertStatus"
+      responses:
+        "200":
+          description: Alert page returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertPageResponse"
+  /api/v1/alerts/{alertId}/status:
+    patch:
+      tags: [Alerts]
+      summary: Update one alert status
+      operationId: updateAlertStatus
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/AlertId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAlertStatusRequest"
+      responses:
+        "200":
+          description: Alert returned with updated status
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/reports/daily-runs:
+    post:
+      tags: [Reports]
+      summary: Generate or refresh one daily report snapshot
+      operationId: generateDailyReport
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daily report generation completed
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyReportGenerationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v1/reports/daily:
+    get:
+      tags: [Reports]
+      summary: List generated daily reports
+      operationId: listDailyReports
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Daily report page returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyReportPageResponse"
+  /api/v1/reports/daily/{reportDate}:
+    get:
+      tags: [Reports]
+      summary: Get one generated daily report
+      operationId: getDailyReport
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: reportDate
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daily report returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyReportResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
   headers:
     RequestId:
@@ -315,6 +554,22 @@ components:
         minimum: 1
     ClusterId:
       name: clusterId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    SubscriptionId:
+      name: subscriptionId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    AlertId:
+      name: alertId
       in: path
       required: true
       schema:
@@ -359,6 +614,12 @@ components:
     AnalysisRunStatus:
       type: string
       enum: [PENDING, RUNNING, SUCCEEDED, FAILED]
+    AlertStatus:
+      type: string
+      enum: [NEW, ACKED, DISMISSED]
+    ReportStatus:
+      type: string
+      enum: [GENERATED]
     CrawlTaskStatus:
       type: string
       enum: [PENDING, RUNNING, SUCCEEDED, PARTIAL_FAILED, FAILED, CANCELLED]
@@ -394,6 +655,49 @@ components:
       properties:
         enabled:
           type: boolean
+    CreateSubscriptionRequest:
+      type: object
+      additionalProperties: false
+      required: [name, enabled, keywords, sourceTypes, suppressWindowHours]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        enabled:
+          type: boolean
+        keywords:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 1
+            maxLength: 80
+        sourceTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceType"
+        minScore:
+          type: [number, "null"]
+          minimum: 0
+        suppressWindowHours:
+          type: integer
+          minimum: 1
+          maximum: 720
+    UpdateSubscriptionStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean
+    UpdateAlertStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/AlertStatus"
     Source:
       type: object
       required:
@@ -415,6 +719,39 @@ components:
         config:
           type: object
           additionalProperties: true
+        version:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    SubscriptionRule:
+      type: object
+      required:
+        [id, name, enabled, keywords, sourceTypes, suppressWindowHours, version, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        enabled:
+          type: boolean
+        keywords:
+          type: array
+          items:
+            type: string
+        sourceTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceType"
+        minScore:
+          type: [number, "null"]
+        suppressWindowHours:
+          type: integer
+          minimum: 1
         version:
           type: integer
         createdAt:
@@ -662,6 +999,148 @@ components:
         createdAt:
           type: string
           format: date-time
+    AlertRecord:
+      type: object
+      required:
+        [id, subscriptionRuleId, subscriptionName, hotClusterId, hotClusterTitle, sourceTypes, status, matchReason, matchedAt, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        subscriptionRuleId:
+          type: integer
+          format: int64
+        subscriptionName:
+          type: string
+        hotClusterId:
+          type: integer
+          format: int64
+        hotClusterTitle:
+          type: string
+        sourceTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceType"
+        hotScore:
+          type: [number, "null"]
+        status:
+          $ref: "#/components/schemas/AlertStatus"
+        matchReason:
+          type: object
+          additionalProperties: true
+        matchedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    AlertMatchingRun:
+      type: object
+      required:
+        [scannedClusterCount, matchedRuleCount, createdAlertCount, suppressedAlertCount, completedAt]
+      properties:
+        scannedClusterCount:
+          type: integer
+          minimum: 0
+        matchedRuleCount:
+          type: integer
+          minimum: 0
+        createdAlertCount:
+          type: integer
+          minimum: 0
+        suppressedAlertCount:
+          type: integer
+          minimum: 0
+        completedAt:
+          type: string
+          format: date-time
+    DailyReportCluster:
+      type: object
+      required:
+        [hotClusterId, title, sourceTypes, itemCount, firstSeenAt, lastSeenAt]
+      properties:
+        hotClusterId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        summary:
+          type: [string, "null"]
+        sourceTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceType"
+        itemCount:
+          type: integer
+          minimum: 0
+        score:
+          oneOf:
+            - $ref: "#/components/schemas/ScoreBreakdown"
+            - type: "null"
+        firstSeenAt:
+          type: string
+          format: date-time
+        lastSeenAt:
+          type: string
+          format: date-time
+        latestAnalysis:
+          oneOf:
+            - $ref: "#/components/schemas/ClusterAnalysis"
+            - type: "null"
+    DailyReportSummary:
+      type: object
+      required:
+        [id, reportDate, status, title, summary, clusterCount, topClusterIds, generatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        reportDate:
+          type: string
+          format: date
+        status:
+          $ref: "#/components/schemas/ReportStatus"
+        title:
+          type: string
+        summary:
+          type: string
+        clusterCount:
+          type: integer
+          minimum: 0
+        topClusterIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        generatedAt:
+          type: string
+          format: date-time
+    DailyReport:
+      allOf:
+        - $ref: "#/components/schemas/DailyReportSummary"
+        - type: object
+          required: [clusters, createdAt]
+          properties:
+            clusters:
+              type: array
+              items:
+                $ref: "#/components/schemas/DailyReportCluster"
+            createdAt:
+              type: string
+              format: date-time
+    DailyReportGeneration:
+      type: object
+      required: [reportDate, clusterCount, generatedAt]
+      properties:
+        reportDate:
+          type: string
+          format: date
+        clusterCount:
+          type: integer
+          minimum: 0
+        generatedAt:
+          type: string
+          format: date-time
     PageMetadata:
       type: object
       required: [page, size, totalElements, totalPages]
@@ -794,6 +1273,150 @@ components:
           const: Success
         data:
           $ref: "#/components/schemas/ClusterAnalysis"
+        timestamp:
+          type: string
+          format: date-time
+    SubscriptionResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/SubscriptionRule"
+        timestamp:
+          type: string
+          format: date-time
+    SubscriptionListResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubscriptionRule"
+        timestamp:
+          type: string
+          format: date-time
+    AlertResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/AlertRecord"
+        timestamp:
+          type: string
+          format: date-time
+    AlertMatchingRunResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/AlertMatchingRun"
+        timestamp:
+          type: string
+          format: date-time
+    AlertPageResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          type: object
+          required: [items, page, size, totalElements, totalPages]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/AlertRecord"
+            page:
+              type: integer
+              minimum: 1
+            size:
+              type: integer
+              minimum: 1
+            totalElements:
+              type: integer
+              format: int64
+              minimum: 0
+            totalPages:
+              type: integer
+              minimum: 0
+        timestamp:
+          type: string
+          format: date-time
+    DailyReportResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/DailyReport"
+        timestamp:
+          type: string
+          format: date-time
+    DailyReportGenerationResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/DailyReportGeneration"
+        timestamp:
+          type: string
+          format: date-time
+    DailyReportPageResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          type: object
+          required: [items, page, size, totalElements, totalPages]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DailyReportSummary"
+            page:
+              type: integer
+              minimum: 1
+            size:
+              type: integer
+              minimum: 1
+            totalElements:
+              type: integer
+              format: int64
+              minimum: 0
+            totalPages:
+              type: integer
+              minimum: 0
         timestamp:
           type: string
           format: date-time

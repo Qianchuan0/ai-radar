@@ -10,8 +10,8 @@
         <div class="nav-item"><span>仪表盘</span></div>
         <div class="nav-item active"><span>热点榜单</span></div>
         <div class="nav-item"><span>数据源</span></div>
-        <div class="nav-item"><span>订阅告警</span></div>
-        <div class="nav-item"><span>日报</span></div>
+        <RouterLink class="nav-item" :to="{ name: 'alerts' }"><span>订阅告警</span></RouterLink>
+        <RouterLink class="nav-item" :to="{ name: 'daily-reports' }"><span>日报</span></RouterLink>
         <div class="nav-item"><span>评测</span></div>
         <div class="nav-item"><span>系统设置</span></div>
       </nav>

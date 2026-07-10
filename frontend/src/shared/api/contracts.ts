@@ -18,6 +18,8 @@ export type HotClusterSort = "SCORE_DESC" | "LATEST";
 export type HotClusterStatus = "ACTIVE" | "MERGED" | "ARCHIVED";
 export type AnalysisRunStatus = "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED";
 export type AnalysisType = "CLUSTER_BRIEF";
+export type AlertStatus = "NEW" | "ACKED" | "DISMISSED";
+export type ReportStatus = "GENERATED";
 
 export interface HotScore {
     total: number;
@@ -100,4 +102,88 @@ export interface HotClusterListQuery {
     sourceType?: SourceType;
     from?: string;
     to?: string;
+}
+
+export interface SubscriptionRule {
+    id: number;
+    name: string;
+    enabled: boolean;
+    keywords: string[];
+    sourceTypes: SourceType[];
+    minScore: number | null;
+    suppressWindowHours: number;
+    version: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AlertRecord {
+    id: number;
+    subscriptionRuleId: number;
+    subscriptionName: string;
+    hotClusterId: number;
+    hotClusterTitle: string;
+    sourceTypes: SourceType[];
+    hotScore: number | null;
+    status: AlertStatus;
+    matchReason: Record<string, unknown>;
+    matchedAt: string;
+    createdAt: string;
+}
+
+export interface AlertMatchingRun {
+    scannedClusterCount: number;
+    matchedRuleCount: number;
+    createdAlertCount: number;
+    suppressedAlertCount: number;
+    completedAt: string;
+}
+
+export interface AlertListQuery {
+    page: number;
+    size: number;
+    subscriptionId?: number;
+    status?: AlertStatus;
+}
+
+export interface DailyReportCluster {
+    hotClusterId: number;
+    title: string;
+    summary: string | null;
+    sourceTypes: SourceType[];
+    itemCount: number;
+    score: HotScore | null;
+    firstSeenAt: string;
+    lastSeenAt: string;
+    latestAnalysis: ClusterAnalysis | null;
+}
+
+export interface DailyReportSummary {
+    id: number;
+    reportDate: string;
+    status: ReportStatus;
+    title: string;
+    summary: string;
+    clusterCount: number;
+    topClusterIds: number[];
+    generatedAt: string;
+}
+
+export interface DailyReport {
+    id: number;
+    reportDate: string;
+    status: ReportStatus;
+    title: string;
+    summary: string;
+    clusterCount: number;
+    topClusterIds: number[];
+    clusters: DailyReportCluster[];
+    generatedAt: string;
+    createdAt: string;
+}
+
+export interface DailyReportGeneration {
+    reportDate: string;
+    clusterCount: number;
+    generatedAt: string;
 }

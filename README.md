@@ -19,7 +19,7 @@ AI information is fragmented across research feeds, developer communities, and o
 
 - Start from `arXiv`, `Hacker News`, and `GitHub`.
 - Prove the closed loop from source configuration to event-level hot-cluster display.
-- Current verified path: `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score -> cluster_analysis -> APIs -> frontend list/detail`.
+- Current verified path: `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score -> cluster_analysis -> subscription_rule -> alert_record -> daily_report -> APIs -> frontend list/detail/alerts/reports`.
 
 ## Core Concepts
 
@@ -38,4 +38,4 @@ AI information is fragmented across research feeds, developer communities, and o
 
 ## Current Status
 
-**Phase 1 completed / Phase 2 completed / Phase 3 completed / Phase 4 completed / Phase 5 completed**
+**Phase 1 completed / Phase 2 completed / Phase 3 completed / Phase 4 completed / Phase 5 completed / Phase 6 in progress / Phase 7 in progress**

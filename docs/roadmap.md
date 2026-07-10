@@ -114,7 +114,7 @@
 
 ## Phase 6: Subscription and Alerts
 
-**Status:** Planned
+**Status:** In Progress
 
 ### Goals
 
@@ -126,10 +126,11 @@
 - subscription rules
 - alert matching logic
 - alert records and suppression rules
+- manual matching API and frontend alert review page
 
 ## Phase 7: Daily Report
 
-**Status:** Planned
+**Status:** In Progress
 
 ### Goals
 
@@ -139,8 +140,9 @@
 ### Deliverables
 
 - daily report model
-- generation flow
+- manual generation flow from persisted cluster snapshots
 - report API and page
+- historical report list view
 
 ## Phase 8: Evaluation
 
