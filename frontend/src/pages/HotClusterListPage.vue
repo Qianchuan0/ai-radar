@@ -246,8 +246,8 @@
                 <td>
                   <div class="sources">
                     <div class="source-chip">
-                      <span class="source-icon" :class="sourceClass(inferSourceName(row))">{{ sourceLetter(inferSourceName(row)) }}</span>
-                      {{ inferSourceName(row) }}
+                      <span class="source-icon" :class="sourceClass(primarySourceName(row))">{{ sourceLetter(primarySourceName(row)) }}</span>
+                      {{ primarySourceName(row) }}
                     </div>
                   </div>
                 </td>
@@ -318,7 +318,7 @@ const filteredRows = computed(() => {
   const query = filters.q.trim().toLowerCase();
   return items.value.filter((item) => {
     const score = Number(item.score?.total ?? 0);
-    const sourceMatch = !filters.sourceType || inferSourceType(item) === filters.sourceType;
+    const sourceMatch = !filters.sourceType || item.sourceTypes.includes(filters.sourceType);
     const scoreMatch = score >= filters.minScore;
     const queryMatch = !query || `${item.title} ${item.summary ?? ""}`.toLowerCase().includes(query);
     return sourceMatch && scoreMatch && queryMatch;
@@ -340,7 +340,7 @@ const topScore = computed(() => Math.max(0, ...filteredRows.value.map((item) => 
 const freshCount = computed(() => filteredRows.value.filter((item) => isFresh(item.lastSeenAt)).length);
 const generatedAtLabel = computed(() => generatedAt.value ? relativeTime(generatedAt.value) : "等待加载");
 const sourceStatusRows = computed(() => {
-  const values = new Set(filteredRows.value.map(inferSourceName));
+  const values = new Set(filteredRows.value.flatMap((item) => item.sourceTypes.map(sourceTypeLabel)));
   return Array.from(values.size ? values : new Set(["Hacker News"])).map((name) => ({ name }));
 });
 
@@ -383,15 +383,11 @@ function changePage(page: number): void {
   router.push({ name: "clusters", query: buildHotClusterQuery({ ...filters, page }) });
 }
 
-function inferSourceType(item: HotClusterSummary) {
-  const text = `${item.title} ${item.summary ?? ""}`.toLowerCase();
-  if (text.includes("github")) return "GITHUB" as const;
-  if (text.includes("arxiv") || text.includes("paper") || text.includes("research")) return "ARXIV" as const;
-  return "HACKER_NEWS" as const;
+function primarySourceName(item: HotClusterSummary): string {
+  return sourceTypeLabel(item.sourceTypes[0] ?? "HACKER_NEWS");
 }
 
-function inferSourceName(item: HotClusterSummary): string {
-  const sourceType = inferSourceType(item);
+function sourceTypeLabel(sourceType: "ARXIV" | "HACKER_NEWS" | "GITHUB"): string {
   if (sourceType === "ARXIV") return "arXiv";
   if (sourceType === "GITHUB") return "GitHub";
   return "Hacker News";

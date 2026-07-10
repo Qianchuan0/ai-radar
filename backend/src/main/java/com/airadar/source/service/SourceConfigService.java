@@ -107,10 +107,15 @@ public class SourceConfigService {
     }
 
     private void validateConfig(CreateSourceRequest request) {
-        if (request.sourceType() != SourceType.HACKER_NEWS) {
-            return;
-        }
         JsonNode config = objectMapper.valueToTree(request.config());
+        switch (request.sourceType()) {
+            case HACKER_NEWS -> validateHackerNewsConfig(config);
+            case ARXIV -> validateArxivConfig(config);
+            case GITHUB -> validateGitHubConfig(config);
+        }
+    }
+
+    private void validateHackerNewsConfig(JsonNode config) {
         String feed = config.path("feed").asText("TOP");
         if (!"TOP".equalsIgnoreCase(feed)) {
             throw new BusinessException(ErrorCode.INVALID_ARGUMENT, "Hacker News feed must be TOP in Phase 2.");
@@ -127,6 +132,74 @@ public class SourceConfigService {
             throw new BusinessException(
                     ErrorCode.INVALID_ARGUMENT,
                     "Hacker News keywords must contain at least one value."
+            );
+        }
+    }
+
+    private void validateArxivConfig(JsonNode config) {
+        String searchQuery = config.path("searchQuery").asText("").trim();
+        if (searchQuery.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "arXiv searchQuery must not be blank."
+            );
+        }
+        int start = config.path("start").asInt(0);
+        if (start < 0) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "arXiv start must be zero or positive."
+            );
+        }
+        int maxResults = config.path("maxResults").asInt(20);
+        if (maxResults < 1 || maxResults > 100) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "arXiv maxResults must be between 1 and 100."
+            );
+        }
+    }
+
+    private void validateGitHubConfig(JsonNode config) {
+        String query = config.path("query").asText("").trim();
+        if (query.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "GitHub query must not be blank."
+            );
+        }
+        int perPage = config.path("perPage").asInt(10);
+        if (perPage < 1 || perPage > 100) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "GitHub perPage must be between 1 and 100."
+            );
+        }
+        int page = config.path("page").asInt(1);
+        if (page < 1) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "GitHub page must be at least 1."
+            );
+        }
+        if ((long) (page - 1) * perPage >= 1000) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "GitHub search pagination must stay within the first 1000 results."
+            );
+        }
+        String sort = config.path("sort").asText("updated").trim();
+        if (!sort.isBlank() && !"stars".equalsIgnoreCase(sort) && !"forks".equalsIgnoreCase(sort) && !"updated".equalsIgnoreCase(sort)) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "GitHub sort must be one of stars, forks, updated."
+            );
+        }
+        String order = config.path("order").asText("desc").trim();
+        if (!order.isBlank() && !"asc".equalsIgnoreCase(order) && !"desc".equalsIgnoreCase(order)) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "GitHub order must be asc or desc."
             );
         }
     }

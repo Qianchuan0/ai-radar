@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Component
-public class HackerNewsHotItemNormalizer {
+public class HackerNewsHotItemNormalizer implements HotItemNormalizer {
 
     private static final Pattern HTML_TAG = Pattern.compile("<[^>]+>");
 
@@ -34,6 +34,12 @@ public class HackerNewsHotItemNormalizer {
         this.urlCanonicalizer = urlCanonicalizer;
     }
 
+    @Override
+    public com.airadar.source.model.SourceType supportedType() {
+        return com.airadar.source.model.SourceType.HACKER_NEWS;
+    }
+
+    @Override
     public Optional<NormalizedHotItem> normalize(RawItemEntity rawItem, SourceConfigEntity sourceConfig) {
         JsonNode payload = rawItem.getRawPayload();
         if (!"story".equals(payload.path("type").asText())
