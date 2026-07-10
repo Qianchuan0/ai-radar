@@ -16,6 +16,8 @@ export interface PageResponse<T> {
 export type SourceType = "ARXIV" | "HACKER_NEWS" | "GITHUB";
 export type HotClusterSort = "SCORE_DESC" | "LATEST";
 export type HotClusterStatus = "ACTIVE" | "MERGED" | "ARCHIVED";
+export type AnalysisRunStatus = "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED";
+export type AnalysisType = "CLUSTER_BRIEF";
 
 export interface HotScore {
     total: number;
@@ -32,6 +34,7 @@ export interface HotClusterSummary {
     firstSeenAt: string;
     lastSeenAt: string;
     itemCount: number;
+    sourceTypes: SourceType[];
     score: HotScore | null;
 }
 
@@ -52,6 +55,42 @@ export interface HotItemEvidence {
 
 export interface HotClusterDetail extends HotClusterSummary {
     items: HotItemEvidence[];
+}
+
+export interface AnalysisEvidenceRef {
+    hotItemId: number;
+    sourceType: SourceType;
+    title: string;
+    sourceUrl: string;
+}
+
+export interface StructuredAnalysisResult {
+    headline: string;
+    brief: string;
+    whyItMatters: string;
+    keySignals: string[];
+    evidenceRefs: AnalysisEvidenceRef[];
+    risks: string[];
+    followUps: string[];
+    confidence: string;
+}
+
+export interface ClusterAnalysis {
+    id: number;
+    hotClusterId: number;
+    analysisType: AnalysisType;
+    status: AnalysisRunStatus;
+    schemaVersion: string;
+    promptVersion: string;
+    modelProvider: string;
+    modelName: string;
+    inputHash: string;
+    result: StructuredAnalysisResult | null;
+    failureCode: string | null;
+    failureMessage: string | null;
+    startedAt: string;
+    finishedAt: string | null;
+    createdAt: string;
 }
 
 export interface HotClusterListQuery {

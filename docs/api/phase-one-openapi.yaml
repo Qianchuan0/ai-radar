@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: AI Radar First Data Flow API
-  version: 0.3.0
+  version: 0.5.0
   description: |
     Implemented contract for the first AI Radar data flow. Manual crawling is
     synchronous in Phase 2, so its response contains the terminal task state.
@@ -12,6 +12,7 @@ tags:
   - name: Sources
   - name: Crawl Tasks
   - name: Hot Clusters
+  - name: Analysis
 paths:
   /api/health:
     get:
@@ -239,6 +240,46 @@ paths:
                 $ref: "#/components/schemas/HotClusterDetailResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/hot-clusters/{clusterId}/analysis-runs:
+    post:
+      tags: [Analysis]
+      summary: Generate one structured analysis run for a hot cluster
+      operationId: triggerClusterAnalysis
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/ClusterId"
+      responses:
+        "200":
+          description: Structured analysis run completed and returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClusterAnalysisResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/hot-clusters/{clusterId}/analysis:
+    get:
+      tags: [Analysis]
+      summary: Get the latest structured analysis for a hot cluster
+      operationId: getLatestClusterAnalysis
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/ClusterId"
+      responses:
+        "200":
+          description: Latest structured analysis returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClusterAnalysisResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
   headers:
     RequestId:
@@ -312,6 +353,12 @@ components:
     SourceType:
       type: string
       enum: [ARXIV, HACKER_NEWS, GITHUB]
+    AnalysisType:
+      type: string
+      enum: [CLUSTER_BRIEF]
+    AnalysisRunStatus:
+      type: string
+      enum: [PENDING, RUNNING, SUCCEEDED, FAILED]
     CrawlTaskStatus:
       type: string
       enum: [PENDING, RUNNING, SUCCEEDED, PARTIAL_FAILED, FAILED, CANCELLED]
@@ -494,7 +541,7 @@ components:
           type: string
     HotClusterSummary:
       type: object
-      required: [id, title, status, firstSeenAt, lastSeenAt, itemCount, score]
+      required: [id, title, status, firstSeenAt, lastSeenAt, itemCount, sourceTypes, score]
       properties:
         id:
           type: integer
@@ -515,6 +562,10 @@ components:
         itemCount:
           type: integer
           minimum: 1
+        sourceTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceType"
         score:
           $ref: "#/components/schemas/ScoreBreakdown"
     HotClusterDetail:
@@ -527,6 +578,90 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/HotItemEvidence"
+    AnalysisEvidenceRef:
+      type: object
+      required: [hotItemId, sourceType, title, sourceUrl]
+      properties:
+        hotItemId:
+          type: integer
+          format: int64
+        sourceType:
+          $ref: "#/components/schemas/SourceType"
+        title:
+          type: string
+        sourceUrl:
+          type: string
+          format: uri
+    StructuredAnalysisResult:
+      type: object
+      required: [headline, brief, whyItMatters, keySignals, evidenceRefs, risks, followUps, confidence]
+      properties:
+        headline:
+          type: string
+        brief:
+          type: string
+        whyItMatters:
+          type: string
+        keySignals:
+          type: array
+          items:
+            type: string
+        evidenceRefs:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalysisEvidenceRef"
+        risks:
+          type: array
+          items:
+            type: string
+        followUps:
+          type: array
+          items:
+            type: string
+        confidence:
+          type: string
+    ClusterAnalysis:
+      type: object
+      required:
+        [id, hotClusterId, analysisType, status, schemaVersion, promptVersion, modelProvider, modelName, inputHash, startedAt, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        hotClusterId:
+          type: integer
+          format: int64
+        analysisType:
+          $ref: "#/components/schemas/AnalysisType"
+        status:
+          $ref: "#/components/schemas/AnalysisRunStatus"
+        schemaVersion:
+          type: string
+        promptVersion:
+          type: string
+        modelProvider:
+          type: string
+        modelName:
+          type: string
+        inputHash:
+          type: string
+        result:
+          oneOf:
+            - $ref: "#/components/schemas/StructuredAnalysisResult"
+            - type: "null"
+        failureCode:
+          type: [string, "null"]
+        failureMessage:
+          type: [string, "null"]
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: [string, "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
     PageMetadata:
       type: object
       required: [page, size, totalElements, totalPages]
@@ -646,6 +781,19 @@ components:
           const: Success
         data:
           $ref: "#/components/schemas/HotClusterDetail"
+        timestamp:
+          type: string
+          format: date-time
+    ClusterAnalysisResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/ClusterAnalysis"
         timestamp:
           type: string
           format: date-time

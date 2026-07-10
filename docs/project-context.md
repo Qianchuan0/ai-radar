@@ -36,7 +36,8 @@ multi-source collection
 -> explainable scoring
 -> hot-cluster APIs
 -> frontend list/detail pages
--> later analysis, alerting, reporting, evaluation
+-> structured analysis
+-> later alerting, reporting, evaluation
 ```
 
 ## MVP Sources
@@ -75,7 +76,7 @@ Planned fields:
 
 Purpose: monitor AI open-source project activity and adoption.
 
-Planned fields:
+Current Phase 4 fields:
 
 - `repo_full_name`
 - `repo_name`
@@ -88,7 +89,6 @@ Planned fields:
 - `watchers`
 - `topics`
 - `language`
-- `latest_release`
 - `updated_at`
 
 ## MVP Functional Modules
@@ -162,13 +162,12 @@ Stores the explainable score history for a cluster, including total score, compo
 - `hot_cluster` is the primary business object
 - `raw_item` must stay available for traceability and evaluation
 - LLMs cannot be the sole decision maker for clustering or scoring
+- structured analysis must stay evidence-grounded and persist every run outcome
 - important technical decisions must be reflected in the decision log or ADRs
 - avoid heavy infrastructure before the product proves the need
 
 ## What Is Intentionally Out of Scope Right Now
 
-- arXiv and GitHub collectors
 - scheduled orchestration and heavy job infrastructure
 - embedding or LLM clustering
-- LLM structured analysis
 - subscriptions, alerts, daily reports, and full evaluation workflows

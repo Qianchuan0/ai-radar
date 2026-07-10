@@ -16,7 +16,24 @@ spring:
     clean-disabled: true
 
 ai-radar:
+  analysis:
+    provider: ${AI_RADAR_ANALYSIS_PROVIDER:fake}
+    model-name: ${AI_RADAR_ANALYSIS_MODEL_NAME:fake-cluster-brief-v1}
+    schema-version: ${AI_RADAR_ANALYSIS_SCHEMA_VERSION:cluster-brief.v1}
+    prompt-version: ${AI_RADAR_ANALYSIS_PROMPT_VERSION:cluster-brief.prompt.v1}
   collector:
+    arxiv:
+      base-url: ${AI_RADAR_ARXIV_BASE_URL:https://export.arxiv.org/api}
+      connect-timeout: ${AI_RADAR_ARXIV_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_ARXIV_READ_TIMEOUT:8s}
+      max-attempts: ${AI_RADAR_ARXIV_MAX_ATTEMPTS:2}
+      min-request-interval: ${AI_RADAR_ARXIV_MIN_REQUEST_INTERVAL:3s}
+    github:
+      base-url: ${AI_RADAR_GITHUB_BASE_URL:https://api.github.com}
+      connect-timeout: ${AI_RADAR_GITHUB_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_GITHUB_READ_TIMEOUT:8s}
+      max-attempts: ${AI_RADAR_GITHUB_MAX_ATTEMPTS:2}
+      token: ${AI_RADAR_GITHUB_TOKEN:}
     hacker-news:
       base-url: ${AI_RADAR_HN_BASE_URL:https://hacker-news.firebaseio.com/v0}
       connect-timeout: ${AI_RADAR_HN_CONNECT_TIMEOUT:3s}

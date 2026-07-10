@@ -164,6 +164,51 @@
                 </div>
               </div>
             </section>
+
+            <section class="card panel analysis-card">
+              <div class="analysis-header">
+                <h2 class="card-title">Structured analysis</h2>
+                <button class="outline-button" type="button" :disabled="analysisLoading || analysisTriggering" @click="runAnalysis">
+                  {{ analysisTriggering ? "Generating..." : "Generate analysis" }}
+                </button>
+              </div>
+              <div v-if="analysisLoading" class="analysis-state">Loading the latest structured analysis.</div>
+              <div v-else-if="analysisError" class="analysis-state analysis-error">{{ analysisError }}</div>
+              <div v-else-if="analysis?.status === 'FAILED'" class="analysis-state analysis-error">
+                {{ analysis.failureMessage || "Structured analysis failed." }}
+              </div>
+              <div v-else-if="analysis?.result" class="analysis-body">
+                <div class="analysis-meta">
+                  <span class="pill">Confidence {{ analysis.result.confidence }}</span>
+                  <span class="analysis-subtle">{{ formatDateTime(analysis.createdAt) }}</span>
+                </div>
+                <h3 class="analysis-headline">{{ analysis.result.headline }}</h3>
+                <p class="paragraph">{{ analysis.result.brief }}</p>
+                <p class="paragraph analysis-why">{{ analysis.result.whyItMatters }}</p>
+                <div class="analysis-block">
+                  <strong>Key signals</strong>
+                  <ul class="bullets">
+                    <li v-for="signal in analysis.result.keySignals" :key="signal">{{ signal }}</li>
+                  </ul>
+                </div>
+                <div class="analysis-block">
+                  <strong>Evidence refs</strong>
+                  <div class="analysis-links">
+                    <a
+                      v-for="refItem in analysis.result.evidenceRefs"
+                      :key="`${refItem.hotItemId}-${refItem.sourceUrl}`"
+                      class="analysis-link"
+                      :href="safeUrl(refItem.sourceUrl)"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {{ sourceTypeLabel(refItem.sourceType) }} - {{ refItem.title }}
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="analysis-state">No structured analysis yet. Generate one from the current evidence pack.</div>
+            </section>
           </div>
         </section>
 
@@ -232,9 +277,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
-import type { HotClusterDetail, HotItemEvidence, SourceType } from "../shared/api/contracts";
+import type { ClusterAnalysis, HotClusterDetail, HotItemEvidence, SourceType } from "../shared/api/contracts";
 import { getErrorMessage } from "../shared/api/errors";
-import { fetchHotClusterDetail } from "../shared/api/hotClusters";
+import { fetchHotClusterDetail, fetchLatestHotClusterAnalysis, triggerHotClusterAnalysis } from "../shared/api/hotClusters";
 import "../styles/hot-cluster-detail.css";
 
 type TabKey = "overview" | "score" | "evidence" | "timeline";
@@ -253,6 +298,10 @@ const activeTab = ref<TabKey>("overview");
 const loading = ref(false);
 const errorMessage = ref("");
 const detail = ref<HotClusterDetail | null>(null);
+const analysis = ref<ClusterAnalysis | null>(null);
+const analysisLoading = ref(false);
+const analysisTriggering = ref(false);
+const analysisError = ref("");
 const generatedAt = ref("");
 const copied = ref(false);
 const favorite = ref(false);
@@ -327,12 +376,44 @@ async function reload(): Promise<void> {
   errorMessage.value = "";
   try {
     detail.value = await fetchHotClusterDetail(clusterId);
+    await loadLatestAnalysis(clusterId);
     generatedAt.value = new Date().toISOString();
   } catch (error) {
     detail.value = null;
+    analysis.value = null;
     errorMessage.value = getErrorMessage(error);
   } finally {
     loading.value = false;
+  }
+}
+
+async function loadLatestAnalysis(clusterId: number): Promise<void> {
+  analysisLoading.value = true;
+  analysisError.value = "";
+  try {
+    analysis.value = await fetchLatestHotClusterAnalysis(clusterId);
+  } catch (error) {
+    analysis.value = null;
+    analysisError.value = getErrorMessage(error);
+  } finally {
+    analysisLoading.value = false;
+  }
+}
+
+async function runAnalysis(): Promise<void> {
+  const clusterId = Number(route.params.clusterId);
+  if (!Number.isFinite(clusterId) || clusterId <= 0) {
+    analysisError.value = "Missing valid cluster id.";
+    return;
+  }
+  analysisTriggering.value = true;
+  analysisError.value = "";
+  try {
+    analysis.value = await triggerHotClusterAnalysis(clusterId);
+  } catch (error) {
+    analysisError.value = getErrorMessage(error);
+  } finally {
+    analysisTriggering.value = false;
   }
 }
 

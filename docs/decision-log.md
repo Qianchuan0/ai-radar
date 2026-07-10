@@ -17,12 +17,13 @@ This file captures short accepted decisions. Larger decisions with context, opti
 11. The frontend MVP uses Vue 3, TypeScript, Vite, Vue Router, Ant Design Vue, and Axios.
 12. The final Phase 3 frontend runs as direct Vue routes instead of `iframe`-wrapped static demo pages.
 13. Local text query and minimum-score filtering are explicit frontend display filters, not backend business fields.
+14. The first Phase 5 structured analysis path is synchronous, evidence-grounded, and stored in `cluster_analysis` with every success or failure recorded.
 
 ## Pending Decisions
 
 1. When to introduce `pgvector` or other embedding-based retrieval.
 2. Whether future scheduling needs exceed Spring Scheduler.
-3. Which LLM integration framework to adopt later.
+3. Which real LLM provider or framework should replace the Phase 5 fake model client.
 4. When global frontend state is large enough to justify Pinia.
 5. When aggregate analytics APIs justify charts or dashboards.
 

@@ -13,6 +13,7 @@ public enum ErrorCode {
     CRAWL_TASK_NOT_FOUND("CRAWL.TASK_NOT_FOUND", "Crawl task not found.", HttpStatus.NOT_FOUND),
     CRAWL_UPSTREAM_ERROR("CRAWL.UPSTREAM_ERROR", "Upstream source request failed.", HttpStatus.BAD_GATEWAY),
     HOT_CLUSTER_NOT_FOUND("CLUSTER.NOT_FOUND", "Hot cluster not found.", HttpStatus.NOT_FOUND),
+    CLUSTER_ANALYSIS_NOT_FOUND("ANALYSIS.NOT_FOUND", "Cluster analysis not found.", HttpStatus.NOT_FOUND),
     INTERNAL_ERROR("COMMON.INTERNAL_ERROR", "Internal server error.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;

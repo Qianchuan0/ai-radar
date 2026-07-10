@@ -80,6 +80,13 @@ public class HotClusterQueryService {
         List<HotItemEvidenceVO> evidence = memberships.stream()
                 .map(membership -> toEvidence(membership, itemById.get(membership.getHotItemId())))
                 .toList();
+        List<SourceType> sourceTypes = memberships.stream()
+                .map(HotClusterItemEntity::getHotItemId)
+                .map(itemById::get)
+                .filter(item -> item != null && item.getSourceType() != null)
+                .map(HotItemEntity::getSourceType)
+                .distinct()
+                .toList();
         return new HotClusterDetailVO(
                 cluster.getId(),
                 cluster.getTitle(),
@@ -88,17 +95,25 @@ public class HotClusterQueryService {
                 cluster.getFirstSeenAt(),
                 cluster.getLastSeenAt(),
                 evidence.size(),
+                sourceTypes,
                 latestScore(clusterId),
                 evidence
         );
     }
 
     private HotClusterSummaryVO toSummary(HotClusterEntity cluster) {
-        int itemCount = Math.toIntExact(hotClusterItemMapper.selectCount(
-                new LambdaQueryWrapper<HotClusterItemEntity>()
-                        .eq(HotClusterItemEntity::getHotClusterId, cluster.getId())
-                        .isNull(HotClusterItemEntity::getRemovedAt)
-        ));
+        List<HotClusterItemEntity> memberships = activeMemberships(cluster.getId());
+        Map<Long, HotItemEntity> itemById = hotItemMapper
+                .selectBatchIds(memberships.stream().map(HotClusterItemEntity::getHotItemId).toList())
+                .stream()
+                .collect(Collectors.toMap(HotItemEntity::getId, Function.identity()));
+        List<SourceType> sourceTypes = memberships.stream()
+                .map(HotClusterItemEntity::getHotItemId)
+                .map(itemById::get)
+                .filter(item -> item != null && item.getSourceType() != null)
+                .map(HotItemEntity::getSourceType)
+                .distinct()
+                .toList();
         return new HotClusterSummaryVO(
                 cluster.getId(),
                 cluster.getTitle(),
@@ -106,7 +121,8 @@ public class HotClusterQueryService {
                 cluster.getStatus(),
                 cluster.getFirstSeenAt(),
                 cluster.getLastSeenAt(),
-                itemCount,
+                memberships.size(),
+                sourceTypes,
                 latestScore(cluster.getId())
         );
     }

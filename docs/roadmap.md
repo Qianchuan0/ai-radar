@@ -72,22 +72,30 @@
 
 ## Phase 4: Additional Data Sources
 
-**Status:** Planned
+**Status:** Completed
 
 ### Goals
 
-- extend collectors to the remaining MVP data sources
-- validate cross-source normalization and multi-source clustering
+- extend the MVP from single-source Hacker News to real multi-source collection
+- validate cross-source normalization and multi-source clustering without introducing new infrastructure
 
 ### Deliverables
 
-- arXiv and GitHub collectors
-- source-specific retry and rate-limit behavior
+- arXiv client closed loop with Atom XML parsing and rate-limit-aware request settings
+- arXiv raw-item closed loop through manual crawl, `crawl_task`, and `raw_item`
+- arXiv hot-item normalization closed loop with stable field mapping
+- GitHub client closed loop with optional token auth and repository-search parsing
+- GitHub raw-item closed loop through manual crawl, `crawl_task`, and `raw_item`
+- GitHub hot-item normalization closed loop with repository metadata mapped into the unified schema
+- GitHub hot-cluster ranking closed loop through existing rule-based clustering and scoring
+- cross-source clustering proof using Hacker News plus arXiv canonical URL evidence
+- cross-source clustering proof using Hacker News plus GitHub canonical URL evidence
+- source-specific retry and rate-limit-aware request settings
 - cross-source normalization tests
 
 ## Phase 5: LLM Structured Analysis
 
-**Status:** Planned
+**Status:** Completed
 
 ### Goals
 
@@ -99,6 +107,10 @@
 - LLM integration decision
 - structured output schema
 - analysis service and observability hooks
+- `cluster_analysis` persistence for run metadata, payloads, and failures
+- `POST /api/v1/hot-clusters/{clusterId}/analysis-runs` trigger API
+- `GET /api/v1/hot-clusters/{clusterId}/analysis` latest-analysis API
+- detail-page structured analysis card backed by the real API
 
 ## Phase 6: Subscription and Alerts
 
