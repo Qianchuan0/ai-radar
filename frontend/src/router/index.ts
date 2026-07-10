@@ -31,6 +31,11 @@ const router = createRouter({
             path: "/reports/daily",
             name: "daily-reports",
             component: () => import("../pages/DailyReportsPage.vue")
+        },
+        {
+            path: "/evaluation",
+            name: "evaluation",
+            component: () => import("../pages/EvaluationPage.vue")
         }
     ]
 });

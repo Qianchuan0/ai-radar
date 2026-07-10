@@ -187,3 +187,79 @@ export interface DailyReportGeneration {
     clusterCount: number;
     generatedAt: string;
 }
+
+export type EvaluationCaseType =
+    | "CRAWL_ITEM_PRESENT"
+    | "CLUSTER_MEMBERSHIP"
+    | "SCORE_THRESHOLD"
+    | "ANALYSIS_REQUIRED_FIELDS"
+    | "ALERT_EXPECTED_RECORD";
+export type EvaluationCaseStatus = "PASSED" | "FAILED" | "ERROR";
+export type EvaluationRunStatus = "RUNNING" | "COMPLETED" | "FAILED";
+
+export interface EvaluationDataset {
+    id: number;
+    name: string;
+    description: string | null;
+    version: number;
+    enabled: boolean;
+    caseCount: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface EvaluationCase {
+    id: number;
+    datasetId: number;
+    caseCode: string;
+    caseType: EvaluationCaseType;
+    targetPayload: Record<string, unknown>;
+    expectedPayload: Record<string, unknown>;
+    notes: string | null;
+    enabled: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface EvaluationRunSummary {
+    id: number;
+    datasetId: number;
+    datasetName: string | null;
+    status: EvaluationRunStatus;
+    totalCases: number;
+    passedCases: number;
+    failedCases: number;
+    errorCases: number;
+    startedAt: string;
+    finishedAt: string | null;
+    createdAt: string;
+}
+
+export interface EvaluationCaseResult {
+    id: number;
+    caseId: number;
+    caseCode: string;
+    caseType: EvaluationCaseType;
+    status: EvaluationCaseStatus;
+    actualPayload: Record<string, unknown>;
+    failureReason: string | null;
+    evaluatedAt: string;
+}
+
+export interface EvaluationRun extends EvaluationRunSummary {
+    metricsPayload: Record<string, unknown>;
+    errorAnalysisPayload: Record<string, unknown>;
+    caseResults: EvaluationCaseResult[];
+}
+
+export interface EvaluationRunGeneration {
+    runId: number;
+    datasetId: number;
+    status: EvaluationRunStatus;
+    totalCases: number;
+    passedCases: number;
+    failedCases: number;
+    errorCases: number;
+    startedAt: string;
+    finishedAt: string;
+}

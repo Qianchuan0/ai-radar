@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: AI Radar First Data Flow API
-  version: 0.7.0
+  version: 0.8.0
   description: |
     Implemented contract for the first AI Radar data flow. Manual crawling is
     synchronous in Phase 2, so its response contains the terminal task state.
@@ -16,6 +16,7 @@ tags:
   - name: Subscriptions
   - name: Alerts
   - name: Reports
+  - name: Evaluation
 paths:
   /api/health:
     get:
@@ -517,6 +518,196 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DailyReportResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/evaluation/datasets:
+    post:
+      tags: [Evaluation]
+      summary: Create an evaluation dataset
+      operationId: createEvaluationDataset
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEvaluationDatasetRequest"
+      responses:
+        "201":
+          description: Evaluation dataset created
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationDatasetResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    get:
+      tags: [Evaluation]
+      summary: List evaluation datasets
+      operationId: listEvaluationDatasets
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Evaluation datasets returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationDatasetListResponse"
+  /api/v1/evaluation/datasets/{datasetId}/cases:
+    post:
+      tags: [Evaluation]
+      summary: Create a labeled evaluation case
+      operationId: createEvaluationCase
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEvaluationCaseRequest"
+      responses:
+        "201":
+          description: Evaluation case created
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationCaseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    get:
+      tags: [Evaluation]
+      summary: List evaluation cases for one dataset
+      operationId: listEvaluationCases
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Evaluation cases returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationCaseListResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/evaluation/runs:
+    post:
+      tags: [Evaluation]
+      summary: Manually trigger one evaluation run for a dataset
+      operationId: triggerEvaluationRun
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: datasetId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Evaluation run completed
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationRunGenerationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      tags: [Evaluation]
+      summary: List evaluation runs
+      operationId: listEvaluationRuns
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: datasetId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Evaluation run page returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationRunPageResponse"
+  /api/v1/evaluation/runs/{runId}:
+    get:
+      tags: [Evaluation]
+      summary: Get one evaluation run with metrics, error analysis, and case results
+      operationId: getEvaluationRun
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: Evaluation run returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationRunResponse"
         "404":
           $ref: "#/components/responses/NotFound"
 components:
@@ -1417,6 +1608,314 @@ components:
             totalPages:
               type: integer
               minimum: 0
+        timestamp:
+          type: string
+          format: date-time
+    EvaluationCaseType:
+      type: string
+      enum:
+        - CRAWL_ITEM_PRESENT
+        - CLUSTER_MEMBERSHIP
+        - SCORE_THRESHOLD
+        - ANALYSIS_REQUIRED_FIELDS
+        - ALERT_EXPECTED_RECORD
+    EvaluationCaseStatus:
+      type: string
+      enum: [PASSED, FAILED, ERROR]
+    EvaluationRunStatus:
+      type: string
+      enum: [RUNNING, COMPLETED, FAILED]
+    CreateEvaluationDatasetRequest:
+      type: object
+      required: [name, enabled]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        enabled:
+          type: boolean
+    CreateEvaluationCaseRequest:
+      type: object
+      required: [caseCode, caseType, targetPayload, expectedPayload, enabled]
+      properties:
+        caseCode:
+          type: string
+          maxLength: 120
+        caseType:
+          $ref: "#/components/schemas/EvaluationCaseType"
+        targetPayload:
+          type: object
+        expectedPayload:
+          type: object
+        notes:
+          type: string
+          maxLength: 500
+        enabled:
+          type: boolean
+    EvaluationDataset:
+      type: object
+      required: [id, name, version, enabled, caseCount, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        version:
+          type: integer
+        enabled:
+          type: boolean
+        caseCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    EvaluationCase:
+      type: object
+      required: [id, datasetId, caseCode, caseType, targetPayload, expectedPayload, enabled, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        datasetId:
+          type: integer
+          format: int64
+        caseCode:
+          type: string
+        caseType:
+          $ref: "#/components/schemas/EvaluationCaseType"
+        targetPayload:
+          type: object
+        expectedPayload:
+          type: object
+        notes:
+          type: string
+          nullable: true
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    EvaluationRunSummary:
+      type: object
+      required: [id, datasetId, status, totalCases, passedCases, failedCases, errorCases, startedAt, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        datasetId:
+          type: integer
+          format: int64
+        datasetName:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/EvaluationRunStatus"
+        totalCases:
+          type: integer
+        passedCases:
+          type: integer
+        failedCases:
+          type: integer
+        errorCases:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    EvaluationCaseResult:
+      type: object
+      required: [id, caseId, caseCode, caseType, status, actualPayload, evaluatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        caseId:
+          type: integer
+          format: int64
+        caseCode:
+          type: string
+        caseType:
+          $ref: "#/components/schemas/EvaluationCaseType"
+        status:
+          $ref: "#/components/schemas/EvaluationCaseStatus"
+        actualPayload:
+          type: object
+        failureReason:
+          type: string
+          nullable: true
+        evaluatedAt:
+          type: string
+          format: date-time
+    EvaluationRun:
+      allOf:
+        - $ref: "#/components/schemas/EvaluationRunSummary"
+        - type: object
+          required: [metricsPayload, errorAnalysisPayload, caseResults]
+          properties:
+            metricsPayload:
+              type: object
+            errorAnalysisPayload:
+              type: object
+            caseResults:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvaluationCaseResult"
+    EvaluationRunGeneration:
+      type: object
+      required: [runId, datasetId, status, totalCases, passedCases, failedCases, errorCases, startedAt, finishedAt]
+      properties:
+        runId:
+          type: integer
+          format: int64
+        datasetId:
+          type: integer
+          format: int64
+        status:
+          $ref: "#/components/schemas/EvaluationRunStatus"
+        totalCases:
+          type: integer
+        passedCases:
+          type: integer
+        failedCases:
+          type: integer
+        errorCases:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+    EvaluationDatasetResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/EvaluationDataset"
+        timestamp:
+          type: string
+          format: date-time
+    EvaluationDatasetListResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvaluationDataset"
+        timestamp:
+          type: string
+          format: date-time
+    EvaluationCaseResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/EvaluationCase"
+        timestamp:
+          type: string
+          format: date-time
+    EvaluationCaseListResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvaluationCase"
+        timestamp:
+          type: string
+          format: date-time
+    EvaluationRunGenerationResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/EvaluationRunGeneration"
+        timestamp:
+          type: string
+          format: date-time
+    EvaluationRunPageResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          type: object
+          required: [items, page, size, totalElements, totalPages]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvaluationRunSummary"
+            page:
+              type: integer
+              minimum: 1
+            size:
+              type: integer
+              minimum: 1
+            totalElements:
+              type: integer
+              format: int64
+              minimum: 0
+            totalPages:
+              type: integer
+              minimum: 0
+        timestamp:
+          type: string
+          format: date-time
+    EvaluationRunResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          $ref: "#/components/schemas/EvaluationRun"
         timestamp:
           type: string
           format: date-time

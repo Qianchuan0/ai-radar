@@ -18,6 +18,10 @@ public enum ErrorCode {
     CRAWL_UPSTREAM_ERROR("CRAWL.UPSTREAM_ERROR", "Upstream source request failed.", HttpStatus.BAD_GATEWAY),
     HOT_CLUSTER_NOT_FOUND("CLUSTER.NOT_FOUND", "Hot cluster not found.", HttpStatus.NOT_FOUND),
     CLUSTER_ANALYSIS_NOT_FOUND("ANALYSIS.NOT_FOUND", "Cluster analysis not found.", HttpStatus.NOT_FOUND),
+    EVALUATION_DATASET_NOT_FOUND("EVALUATION.DATASET_NOT_FOUND", "Evaluation dataset not found.", HttpStatus.NOT_FOUND),
+    EVALUATION_CASE_NOT_FOUND("EVALUATION.CASE_NOT_FOUND", "Evaluation case not found.", HttpStatus.NOT_FOUND),
+    EVALUATION_RUN_NOT_FOUND("EVALUATION.RUN_NOT_FOUND", "Evaluation run not found.", HttpStatus.NOT_FOUND),
+    EVALUATION_EMPTY_DATASET("EVALUATION.EMPTY_DATASET", "Evaluation dataset has no enabled cases.", HttpStatus.CONFLICT),
     INTERNAL_ERROR("COMMON.INTERNAL_ERROR", "Internal server error.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;

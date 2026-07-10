@@ -1,0 +1,9 @@
+package com.airadar.evaluation.model;
+
+public enum EvaluationCaseType {
+    CRAWL_ITEM_PRESENT,
+    CLUSTER_MEMBERSHIP,
+    SCORE_THRESHOLD,
+    ANALYSIS_REQUIRED_FIELDS,
+    ALERT_EXPECTED_RECORD
+}

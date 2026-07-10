@@ -38,7 +38,8 @@ multi-source collection
 -> frontend list/detail pages
 -> structured analysis
 -> subscription matching and alert review
--> later alerting, reporting, evaluation
+-> daily report generation
+-> manual evaluation of labeled cases against persisted data
 ```
 
 ## MVP Sources
@@ -104,6 +105,7 @@ Current Phase 4 fields:
 8. frontend ranking page, detail page, and page states
 9. manual subscription matching and alert review page
 10. manual daily report generation and report history page
+11. manual evaluation loop with labeled datasets, rule-based case verifiers, persisted metrics, and error analysis
 
 ## Phase 1 Minimal Closed Loop
 
@@ -174,4 +176,5 @@ Stores the explainable score history for a cluster, including total score, compo
 
 - scheduled orchestration and heavy job infrastructure
 - embedding or LLM clustering
-- external alert delivery channels, scheduler-driven matching, scheduled report delivery, and full evaluation workflows
+- external alert delivery channels, scheduler-driven matching, and scheduled report delivery
+- automated scheduling of evaluation runs and LLM-as-judge evaluation; the Phase 8 baseline is manual and rule-based only

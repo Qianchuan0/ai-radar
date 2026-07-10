@@ -1,0 +1,497 @@
+.evaluation-app {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(125, 211, 252, 0.28), transparent 28%),
+    linear-gradient(180deg, #f6f8fb 0%, #ecf1f7 100%);
+  color: #172033;
+}
+
+.evaluation-app .sidebar {
+  background: #101828;
+  color: #f8fafc;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.evaluation-app .brand,
+.evaluation-app .nav,
+.evaluation-app .account,
+.evaluation-app .crumbs,
+.evaluation-app .hero,
+.evaluation-app .section-head,
+.evaluation-app .metric-row,
+.evaluation-app .dataset-row,
+.evaluation-app .case-head,
+.evaluation-app .footer,
+.evaluation-app .pager {
+  display: flex;
+  align-items: center;
+}
+
+.evaluation-app .brand {
+  gap: 12px;
+  font-weight: 800;
+}
+
+.evaluation-app .brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+}
+
+.evaluation-app .brand-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.evaluation-app .nav {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.evaluation-app .nav-item {
+  color: #cbd5e1;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.evaluation-app .nav-item.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.evaluation-app .status-card,
+.evaluation-app .account,
+.evaluation-app .panel {
+  border-radius: 8px;
+}
+
+.evaluation-app .status-card,
+.evaluation-app .account {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px;
+}
+
+.evaluation-app .status-card {
+  display: grid;
+  gap: 10px;
+}
+
+.evaluation-app .status-title,
+.evaluation-app .page-title,
+.evaluation-app .panel h2 {
+  font-weight: 800;
+}
+
+.evaluation-app .live,
+.evaluation-app .pill,
+.evaluation-app .chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+}
+
+.evaluation-app .live {
+  margin-left: 8px;
+  background: rgba(56, 189, 248, 0.18);
+  color: #bae6fd;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.evaluation-app .status-link-button,
+.evaluation-app .primary-button,
+.evaluation-app .page,
+.evaluation-app .dataset-card {
+  cursor: pointer;
+}
+
+.evaluation-app .status-link-button,
+.evaluation-app .primary-button,
+.evaluation-app .page {
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 700;
+}
+
+.evaluation-app .status-link-button {
+  margin-top: 4px;
+  width: 100%;
+  border: 0;
+  background: #fff;
+  color: #111827;
+  padding: 10px 12px;
+}
+
+.evaluation-app .account {
+  margin-top: auto;
+  gap: 12px;
+}
+
+.evaluation-app .account-copy {
+  min-width: 0;
+}
+
+.evaluation-app .account-name {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.evaluation-app .avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+}
+
+.evaluation-app .pill {
+  background: #e0f2fe;
+  color: #075985;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.evaluation-app .topbar {
+  grid-column: 2;
+  padding: 18px 28px 0;
+}
+
+.evaluation-app .crumbs {
+  gap: 8px;
+  color: #667085;
+}
+
+.evaluation-app .crumbs a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.evaluation-app .crumb-current {
+  color: #172033;
+  font-weight: 700;
+}
+
+.evaluation-app .main {
+  grid-column: 2;
+  padding: 20px 28px 32px;
+}
+
+.evaluation-app .hero {
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.evaluation-app .page-title {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.05;
+}
+
+.evaluation-app .subtitle,
+.evaluation-app .subtle {
+  color: #667085;
+}
+
+.evaluation-app .hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.evaluation-app .dataset-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.evaluation-app .dataset-field select {
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  background: #fff;
+  min-width: 240px;
+}
+
+.evaluation-app .primary-button {
+  border: 0;
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  color: #fff;
+  padding: 11px 16px;
+}
+
+.evaluation-app .primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.evaluation-app .state-banner {
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.evaluation-app .state-banner.success {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.evaluation-app .state-banner.error {
+  background: #fef2f2;
+  color: #b42318;
+}
+
+.evaluation-app .metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.evaluation-app .metric-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.evaluation-app .metric-label {
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.evaluation-app .metric-value {
+  font-size: 30px;
+  font-weight: 900;
+  margin-top: 6px;
+}
+
+.evaluation-app .metric-value.pass {
+  color: #166534;
+}
+
+.evaluation-app .metric-value.fail {
+  color: #b42318;
+}
+
+.evaluation-app .metric-value.error {
+  color: #b45309;
+}
+
+.evaluation-app .content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.evaluation-app .panel {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e5e7eb;
+  padding: 18px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.evaluation-app .section-head {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.evaluation-app .section-head h2 {
+  margin: 0;
+}
+
+.evaluation-app table.case-type-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.evaluation-app .case-type-table th,
+.evaluation-app .case-type-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eaecf0;
+  font-size: 14px;
+}
+
+.evaluation-app .case-type-table th {
+  color: #667085;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.evaluation-app .case-list {
+  display: grid;
+  gap: 12px;
+}
+
+.evaluation-app .case-card {
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+  padding: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+}
+
+.evaluation-app .case-head {
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.evaluation-app .case-code {
+  font-weight: 800;
+}
+
+.evaluation-app .case-meta {
+  color: #667085;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.evaluation-app .status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.evaluation-app .status-badge.PASSED {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.evaluation-app .status-badge.FAILED {
+  background: #fef2f2;
+  color: #b42318;
+}
+
+.evaluation-app .status-badge.ERROR {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.evaluation-app .case-reason {
+  margin-top: 8px;
+  color: #b42318;
+  font-weight: 600;
+}
+
+.evaluation-app .case-reason.error {
+  color: #b45309;
+}
+
+.evaluation-app .payload-box {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.evaluation-app .payload-block {
+  background: #f8fafc;
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.evaluation-app .payload-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475467;
+  margin-bottom: 6px;
+}
+
+.evaluation-app .payload-json {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 12px;
+  color: #1f2937;
+}
+
+.evaluation-app .empty-state {
+  min-height: 140px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #667085;
+}
+
+.evaluation-app .footer {
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.evaluation-app .pager {
+  gap: 8px;
+}
+
+.evaluation-app .page {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #172033;
+  padding: 10px 12px;
+}
+
+.evaluation-app .page:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 1180px) {
+  .evaluation-app {
+    grid-template-columns: 1fr;
+  }
+
+  .evaluation-app .sidebar,
+  .evaluation-app .topbar,
+  .evaluation-app .main {
+    grid-column: auto;
+  }
+
+  .evaluation-app .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .evaluation-app .payload-box {
+    grid-template-columns: 1fr;
+  }
+
+  .evaluation-app .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

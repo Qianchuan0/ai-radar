@@ -11,7 +11,7 @@
         <div class="nav-item">Sources</div>
         <RouterLink class="nav-item" :to="{ name: 'alerts' }">Alerts</RouterLink>
         <RouterLink class="nav-item active" :to="{ name: 'daily-reports' }">Daily Reports</RouterLink>
-        <div class="nav-item">Evaluation</div>
+        <RouterLink class="nav-item" :to="{ name: 'evaluation' }">Evaluation</RouterLink>
       </nav>
 
       <section class="status-card">

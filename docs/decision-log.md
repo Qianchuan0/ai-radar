@@ -20,6 +20,7 @@ This file captures short accepted decisions. Larger decisions with context, opti
 14. The first Phase 5 structured analysis path is synchronous, evidence-grounded, and stored in `cluster_analysis` with every success or failure recorded.
 15. The first Phase 6 alert path is manual, synchronous, and stored in `subscription_rule` plus `alert_record` before introducing scheduler infrastructure or external delivery channels.
 16. The first Phase 7 daily report path is manual, synchronous, and generated from persisted `hot_cluster`, `hot_score`, evidence, and the latest stored `cluster_analysis` before introducing scheduler infrastructure or new model calls.
+17. The first Phase 8 evaluation loop is manual, rule-based, and runs labeled cases against persisted data (`raw_item`, `hot_item`, `hot_cluster`, `hot_score`, `cluster_analysis`, `alert_record`) without introducing LLM judges, schedulers, queues, vector stores, or external evaluation platforms.
 
 ## Pending Decisions
 
