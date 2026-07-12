@@ -239,6 +239,7 @@ function sourceLabel(source: SourceType): string {
   if (source === "ARXIV") return "arXiv";
   if (source === "GITHUB") return "GitHub";
   if (source === "HUGGING_FACE") return "Hugging Face";
+  if (source === "SOGOU_SEARCH") return "搜狗搜索";
   return "Hacker News";
 }
 

@@ -83,7 +83,7 @@ function parseSort(value: unknown): HotClusterSort {
 
 function parseSourceType(value: unknown): SourceType | undefined {
     const parsed = single(value);
-    if (parsed === "ARXIV" || parsed === "HACKER_NEWS" || parsed === "GITHUB" || parsed === "HUGGING_FACE") {
+    if (parsed === "ARXIV" || parsed === "HACKER_NEWS" || parsed === "GITHUB" || parsed === "HUGGING_FACE" || parsed === "SOGOU_SEARCH") {
         return parsed;
     }
     return undefined;

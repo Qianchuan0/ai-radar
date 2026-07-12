@@ -28,6 +28,7 @@
                 <option value="ARXIV">arXiv</option>
                 <option value="GITHUB">GitHub</option>
                 <option value="HUGGING_FACE">Hugging Face</option>
+                <option value="SOGOU_SEARCH">搜狗搜索</option>
               </select>
             </div>
           </label>
@@ -345,10 +346,11 @@ function primarySourceName(item: HotClusterSummary): string {
   return sourceTypeLabel(item.sourceTypes[0] ?? "HACKER_NEWS");
 }
 
-function sourceTypeLabel(sourceType: "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE"): string {
+function sourceTypeLabel(sourceType: "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE" | "SOGOU_SEARCH"): string {
   if (sourceType === "ARXIV") return "arXiv";
   if (sourceType === "GITHUB") return "GitHub";
   if (sourceType === "HUGGING_FACE") return "Hugging Face";
+  if (sourceType === "SOGOU_SEARCH") return "搜狗搜索";
   return "Hacker News";
 }
 

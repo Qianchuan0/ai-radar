@@ -52,6 +52,11 @@ describe("hot cluster query helpers", () => {
         });
     });
 
+    it("parses SOGOU_SEARCH sourceType from query", () => {
+        const filters = parseHotClusterFilters({ sourceType: "SOGOU_SEARCH" });
+        expect(filters.sourceType).toBe("SOGOU_SEARCH");
+    });
+
     it("creates an isolated reset payload", () => {
         const first = resetHotClusterFilters();
         const second = resetHotClusterFilters();

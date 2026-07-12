@@ -438,6 +438,7 @@ function sourceTypeLabel(sourceType: SourceType): string {
   if (sourceType === "ARXIV") return "arXiv";
   if (sourceType === "GITHUB") return "GitHub";
   if (sourceType === "HUGGING_FACE") return "Hugging Face";
+  if (sourceType === "SOGOU_SEARCH") return "搜狗搜索";
   return "Hacker News";
 }
 

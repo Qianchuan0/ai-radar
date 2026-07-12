@@ -219,7 +219,7 @@ import { getErrorMessage } from "../shared/api/errors";
 import { relativeTime as relativeTimeUtil } from "../shared/utils/datetime";
 import "../styles/alerts-page.css";
 
-const sourceOptions: SourceType[] = ["HACKER_NEWS", "ARXIV", "GITHUB", "HUGGING_FACE"];
+const sourceOptions: SourceType[] = ["HACKER_NEWS", "ARXIV", "GITHUB", "HUGGING_FACE", "SOGOU_SEARCH"];
 
 const subscriptions = ref<SubscriptionRule[]>([]);
 const alerts = ref<PageResponse<AlertRecord>>({
@@ -396,6 +396,7 @@ function sourceLabel(source: SourceType): string {
   if (source === "ARXIV") return "arXiv";
   if (source === "GITHUB") return "GitHub";
   if (source === "HUGGING_FACE") return "Hugging Face";
+  if (source === "SOGOU_SEARCH") return "搜狗搜索";
   return "Hacker News";
 }
 
