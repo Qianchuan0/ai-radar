@@ -113,6 +113,7 @@ public class SourceConfigService {
             case ARXIV -> validateArxivConfig(config);
             case GITHUB -> validateGitHubConfig(config);
             case HUGGING_FACE -> validateHuggingFaceConfig(config);
+            case SOGOU_SEARCH -> validateSogouSearchConfig(config);
         }
     }
 
@@ -236,6 +237,37 @@ public class SourceConfigService {
             throw new BusinessException(
                     ErrorCode.INVALID_ARGUMENT,
                     "Hugging Face direction must be asc or desc."
+            );
+        }
+    }
+
+    private void validateSogouSearchConfig(JsonNode config) {
+        String query = config.path("query").asText("").trim();
+        if (query.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Sogou Search query must not be blank."
+            );
+        }
+        int cnt = config.path("cnt").asInt(10);
+        if (cnt != 10 && cnt != 20 && cnt != 30 && cnt != 40 && cnt != 50) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Sogou Search cnt must be one of 10, 20, 30, 40, 50."
+            );
+        }
+        int mode = config.path("mode").asInt(0);
+        if (mode != 0 && mode != 1 && mode != 2) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Sogou Search mode must be 0, 1, or 2."
+            );
+        }
+        String freshness = config.path("freshness").asText("").trim();
+        if (!freshness.isBlank() && !freshness.matches("^[dmy]\\d{0,2}$")) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Sogou Search freshness must match pattern d[N], m[N], y[N] (e.g. d1, d7, m3, y2) or be empty."
             );
         }
     }

@@ -51,6 +51,13 @@ ai-radar:
       connect-timeout: ${AI_RADAR_HN_CONNECT_TIMEOUT:3s}
       read-timeout: ${AI_RADAR_HN_READ_TIMEOUT:5s}
       max-attempts: ${AI_RADAR_HN_MAX_ATTEMPTS:2}
+    sogou-search:
+      base-url: ${AI_RADAR_SOGOU_SEARCH_BASE_URL:https://wsa.tencentcloudapi.com}
+      connect-timeout: ${AI_RADAR_SOGOU_SEARCH_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_SOGOU_SEARCH_READ_TIMEOUT:8s}
+      max-attempts: ${AI_RADAR_SOGOU_SEARCH_MAX_ATTEMPTS:2}
+      secret-id: ${AI_RADAR_SOGOU_SEARCH_SECRET_ID:}
+      secret-key: ${AI_RADAR_SOGOU_SEARCH_SECRET_KEY:}
   operations:
     scheduled-crawl:
       enabled: ${AI_RADAR_SCHEDULED_CRAWL_ENABLED:false}
