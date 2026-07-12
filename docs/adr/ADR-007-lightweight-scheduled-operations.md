@@ -8,7 +8,7 @@ Accepted
 
 After Phase 10, AI Radar has four real sources, manual crawl execution, alerts, reports, evaluation, and a real OpenAI-backed analysis provider. The remaining gap is operational continuity: `source_config` already stores `crawl_interval_minutes`, and `crawl_task.trigger_type` already supports `SCHEDULED`, but the application still depends on manual crawl triggers.
 
-The next step should make source collection repeatable without pulling the project into heavy orchestration before the product proves the need.
+The next step should make source collection repeatable without pulling the project into heavy orchestration before the product proves the need. After the scheduled crawl loop landed, daily report generation became the next low-risk scheduled operation because it already has an idempotent date-level persistence model.
 
 ## Decision
 
@@ -23,6 +23,14 @@ The initial scheduled scope is intentionally narrow:
 - keep alert matching, report generation, evaluation scheduling, and external delivery channels manual
 
 The scheduled runner must be configuration-gated and disabled by default in local environments.
+
+Phase 11B extends the same lightweight scheduler baseline to daily report generation:
+
+- schedule daily report generation only
+- reuse the existing `DailyReportService.generate(LocalDate)` path
+- target UTC yesterday by default through a configurable date offset
+- skip existing reports by default and refresh only when explicitly configured
+- keep alert matching, external delivery, scheduled evaluation, queues, and distributed locks out of scope
 
 ## Alternatives Considered
 
@@ -61,5 +69,5 @@ The scheduled runner must be configuration-gated and disabled by default in loca
 
 ## Follow-up Notes
 
-- Re-evaluate the scheduler choice when scheduled alerts, scheduled reports, or multi-instance coordination become real requirements.
-- Do not introduce external delivery or report scheduling under this ADR; those remain separate decisions.
+- Re-evaluate the scheduler choice when scheduled alerts, external report delivery, or multi-instance coordination become real requirements.
+- Do not introduce external delivery under this ADR; delivery channels remain a separate decision.

@@ -222,3 +222,25 @@
 - Phase 11A acceptance script
 - Phase 11A acceptance note
 - documentation sync: roadmap, decision log, ADR, project context, OpenAPI
+
+## Phase 11B: Scheduled Daily Report Generation
+
+**Status:** In Progress
+
+### Goals
+
+- add a second lightweight scheduled operations loop for daily report generation
+- reuse the existing `DailyReportService.generate(LocalDate)` and `daily_report.report_date` uniqueness
+- default to generating the UTC previous day report without external delivery or alert scheduling
+- keep the runner configuration-gated and disabled by default
+
+### Deliverables
+
+- Spring Scheduler based scheduled daily report runner gated by configuration
+- target report date calculation based on UTC date plus configurable offset
+- default skip behavior when the target date already has a report
+- explicit `refresh-existing` option for regenerating an existing report
+- backend integration coverage for generation, skip, refresh, empty-report, and default-disabled behavior
+- Phase 11B acceptance script
+- Phase 11B acceptance note
+- documentation sync: README, roadmap, decision log, ADR, project context

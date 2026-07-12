@@ -26,6 +26,7 @@ This file captures short accepted decisions. Larger decisions with context, opti
 20. Phase 9A closes with Hugging Face Models integrated into the existing manual crawl-to-cluster path, frontend-compatible source labels, and a dedicated acceptance script plus source connector checklist for future source additions.
 21. Phase 10 replaces the Phase 5 fake structured analysis provider with a real OpenAI-compatible provider built on the official `openai-java` SDK and the Chat Completions API. Chat Completions is preferred over the Responses API because it is the lowest-common-denominator OpenAI-compatible surface and is also supported by gateways such as DeepSeek. The wire-level schema mode is `response_format=json_object` rather than the stricter `json_schema`, because the latter is not implemented by every compatible gateway; the JSON shape is described in the system prompt and enforced by `OpenAiAnalysisResponseMapper`. The application must still start when the API key is missing; in that case `/analysis-runs` returns `FAILED` with `ANALYSIS_PROVIDER_NOT_CONFIGURED` persisted in `cluster_analysis`.
 22. Phase 11A introduces lightweight scheduled crawl operations with Spring Scheduler, not Quartz or external job infrastructure. The first scheduled loop is limited to source crawling only, reuses `crawl_interval_minutes` plus recent `crawl_task` history for due checks, creates `SCHEDULED` tasks through the existing crawl execution service, and keeps scheduled alert matching, scheduled report generation, external delivery channels, and scheduled evaluation out of scope.
+23. Phase 11B extends the lightweight Spring Scheduler baseline to daily report generation. The scheduled runner reuses `DailyReportService.generate(LocalDate)`, targets UTC yesterday by default, skips an existing report unless `refresh-existing` is enabled, and keeps alert matching, external delivery, scheduled evaluation, Quartz, queues, and distributed locks out of scope.
 
 ## Pending Decisions
 
@@ -34,7 +35,6 @@ This file captures short accepted decisions. Larger decisions with context, opti
 3. When global frontend state is large enough to justify Pinia.
 4. When aggregate analytics APIs justify charts or dashboards.
 5. Which delivery channel should be introduced first after the manual Phase 6 alert baseline.
-6. When daily report generation should move from manual runs to scheduled delivery.
 
 ## ADR Index
 

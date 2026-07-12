@@ -56,6 +56,12 @@ ai-radar:
       enabled: ${AI_RADAR_SCHEDULED_CRAWL_ENABLED:false}
       fixed-delay: ${AI_RADAR_SCHEDULED_CRAWL_FIXED_DELAY:60s}
       initial-delay: ${AI_RADAR_SCHEDULED_CRAWL_INITIAL_DELAY:30s}
+    scheduled-daily-report:
+      enabled: ${AI_RADAR_SCHEDULED_DAILY_REPORT_ENABLED:false}
+      fixed-delay: ${AI_RADAR_SCHEDULED_DAILY_REPORT_FIXED_DELAY:15m}
+      initial-delay: ${AI_RADAR_SCHEDULED_DAILY_REPORT_INITIAL_DELAY:1m}
+      report-date-offset-days: ${AI_RADAR_SCHEDULED_DAILY_REPORT_OFFSET_DAYS:1}
+      refresh-existing: ${AI_RADAR_SCHEDULED_DAILY_REPORT_REFRESH_EXISTING:false}
 
 mybatis-plus:
   configuration:

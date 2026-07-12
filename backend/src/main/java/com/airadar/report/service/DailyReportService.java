@@ -115,6 +115,13 @@ public class DailyReportService {
     }
 
     @Transactional(readOnly = true)
+    public boolean existsByReportDate(LocalDate reportDate) {
+        Long count = dailyReportMapper.selectCount(new LambdaQueryWrapper<DailyReportEntity>()
+                .eq(DailyReportEntity::getReportDate, reportDate));
+        return count != null && count > 0;
+    }
+
+    @Transactional(readOnly = true)
     public PageResponse<DailyReportSummaryVO> list(int page, int size) {
         long total = dailyReportMapper.selectCount(new LambdaQueryWrapper<DailyReportEntity>());
         long offset = (long) (page - 1) * size;

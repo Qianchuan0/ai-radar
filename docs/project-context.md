@@ -39,7 +39,7 @@ multi-source collection
 -> frontend list/detail pages
 -> structured analysis (real OpenAI provider with Structured Outputs, fake fallback retained)
 -> subscription matching and alert review
--> daily report generation
+-> manual and optional scheduled daily report generation
 -> manual evaluation of labeled cases against persisted data
 ```
 
@@ -122,10 +122,11 @@ Phase 9A fields:
 7. hot-cluster list/detail APIs
 8. frontend ranking page, detail page, and page states
 9. manual subscription matching and alert review page
-10. manual daily report generation and report history page
+10. manual daily report generation, optional scheduled report generation, and report history page
 11. manual evaluation loop with labeled datasets, rule-based case verifiers, persisted metrics, and error analysis
 12. real OpenAI structured analysis provider with provider-not-configured fallback and persisted failure codes
 13. lightweight scheduled crawl runner that reuses `crawl_interval_minutes` and the existing crawl-task pipeline
+14. lightweight scheduled daily report runner that reuses the existing report generation service
 
 ## Phase 1 Minimal Closed Loop
 
@@ -194,7 +195,7 @@ Stores the explainable score history for a cluster, including total score, compo
 
 ## What Is Intentionally Out of Scope Right Now
 
-- heavy scheduled orchestration and external job infrastructure beyond the lightweight Spring Scheduler crawl loop
+- heavy scheduled orchestration and external job infrastructure beyond the lightweight Spring Scheduler operations loops
 - embedding or LLM clustering
 - external alert delivery channels, scheduler-driven matching, and scheduled report delivery
 - automated scheduling of evaluation runs and LLM-as-judge evaluation; the Phase 8 baseline is manual and rule-based only
