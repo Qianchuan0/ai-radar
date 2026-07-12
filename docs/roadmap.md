@@ -244,3 +244,25 @@
 - Phase 11B acceptance script
 - Phase 11B acceptance note
 - documentation sync: README, roadmap, decision log, ADR, project context
+
+## Phase 12A: Sogou Search Source
+
+**Status:** In Progress
+
+### Goals
+
+- add the first Chinese platform source via the Tencent Cloud Web Search API (wsa)
+- reuse the existing `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score` closed loop
+- keep the integration offline-testable without real API credentials
+
+### Deliverables
+
+- `SOGOU_SEARCH` source type with Tencent Cloud v3 signature support
+- `TencentCloudV3Signer` reusable utility for TC3-HMAC-SHA256 signature
+- `SogouSearchClient`, `SogouSearchCollector`, and `SogouSearchHotItemNormalizer`
+- source config validation for query, cnt, mode, and freshness
+- raw-to-hot integration test proving the full closed loop
+- `CRAWL_PROVIDER_NOT_CONFIGURED` error code for missing credentials
+- frontend source label "搜狗搜索" and filter option
+- Phase 12A acceptance script and acceptance note
+- documentation sync: roadmap, decision log, project context, README

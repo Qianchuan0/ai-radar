@@ -111,6 +111,22 @@ Phase 9A fields:
 - `last_modified`
 - `private`
 
+### Sogou Search
+
+Purpose: monitor Chinese-language AI news and discussions via the Tencent Cloud Web Search API.
+
+Phase 12A fields:
+
+- `title`
+- `url`
+- `passage`
+- `content` (premium only)
+- `site`
+- `score`
+- `date`
+- `rank`
+- `query`
+
 ## MVP Functional Modules
 
 1. source configuration and enable/disable controls
@@ -127,6 +143,7 @@ Phase 9A fields:
 12. real OpenAI structured analysis provider with provider-not-configured fallback and persisted failure codes
 13. lightweight scheduled crawl runner that reuses `crawl_interval_minutes` and the existing crawl-task pipeline
 14. lightweight scheduled daily report runner that reuses the existing report generation service
+15. Sogou Search as the first Chinese platform source via Tencent Cloud Web Search API, with manual TC3-HMAC-SHA256 signature
 
 ## Phase 1 Minimal Closed Loop
 
