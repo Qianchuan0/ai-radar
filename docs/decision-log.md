@@ -21,6 +21,9 @@ This file captures short accepted decisions. Larger decisions with context, opti
 15. The first Phase 6 alert path is manual, synchronous, and stored in `subscription_rule` plus `alert_record` before introducing scheduler infrastructure or external delivery channels.
 16. The first Phase 7 daily report path is manual, synchronous, and generated from persisted `hot_cluster`, `hot_score`, evidence, and the latest stored `cluster_analysis` before introducing scheduler infrastructure or new model calls.
 17. The first Phase 8 evaluation loop is manual, rule-based, and runs labeled cases against persisted data (`raw_item`, `hot_item`, `hot_cluster`, `hot_score`, `cluster_analysis`, `alert_record`) without introducing LLM judges, schedulers, queues, vector stores, or external evaluation platforms.
+18. The first fourth-source expansion after Phase 8 is Hugging Face Models, while Hugging Face datasets and Spaces stay out of scope for Phase 9A.
+19. The frontend uses a unified `AppLayout` shell component for sidebar/topbar/breadcrumb, with menu items and breadcrumbs derived from route `meta`. UI language is unified to Chinese with ant-design-vue `zh_CN` locale configured via `a-config-provider`. The independent layouts and English copy previously implemented per page (Phase 6/7/8) are consolidated into this shell, and `shared/utils/datetime.ts` provides unified Chinese time formatting.
+20. Phase 9A closes with Hugging Face Models integrated into the existing manual crawl-to-cluster path, frontend-compatible source labels, and a dedicated acceptance script plus source connector checklist for future source additions.
 
 ## Pending Decisions
 

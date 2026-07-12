@@ -34,6 +34,12 @@ ai-radar:
       read-timeout: ${AI_RADAR_GITHUB_READ_TIMEOUT:8s}
       max-attempts: ${AI_RADAR_GITHUB_MAX_ATTEMPTS:2}
       token: ${AI_RADAR_GITHUB_TOKEN:}
+    hugging-face:
+      base-url: ${AI_RADAR_HF_BASE_URL:https://huggingface.co}
+      connect-timeout: ${AI_RADAR_HF_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_HF_READ_TIMEOUT:8s}
+      max-attempts: ${AI_RADAR_HF_MAX_ATTEMPTS:2}
+      token: ${AI_RADAR_HF_TOKEN:}
     hacker-news:
       base-url: ${AI_RADAR_HN_BASE_URL:https://hacker-news.firebaseio.com/v0}
       connect-timeout: ${AI_RADAR_HN_CONNECT_TIMEOUT:3s}

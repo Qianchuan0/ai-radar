@@ -17,9 +17,10 @@ AI information is fragmented across research feeds, developer communities, and o
 
 ## MVP Scope
 
-- Start from `arXiv`, `Hacker News`, and `GitHub`.
+- Start from `arXiv`, `Hacker News`, `GitHub`, and `Hugging Face Models`.
 - Prove the closed loop from source configuration to event-level hot-cluster display.
 - Current verified path: `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score -> cluster_analysis -> subscription_rule -> alert_record -> daily_report -> evaluation_run -> APIs -> frontend list/detail/alerts/reports/evaluation`.
+- Current verified source expansion: `Hacker News + arXiv + GitHub + Hugging Face Models`, with `HUGGING_FACE` covered through client parsing, raw retention, normalization, clustering, scoring, and frontend-compatible source filtering.
 
 ## Core Concepts
 
@@ -38,4 +39,4 @@ AI information is fragmented across research feeds, developer communities, and o
 
 ## Current Status
 
-**Phase 1 completed / Phase 2 completed / Phase 3 completed / Phase 4 completed / Phase 5 completed / Phase 6 completed / Phase 7 completed / Phase 8 completed**
+**Phase 1 completed / Phase 2 completed / Phase 3 completed / Phase 4 completed / Phase 5 completed / Phase 6 completed / Phase 7 completed / Phase 8 completed / Phase 9A completed**

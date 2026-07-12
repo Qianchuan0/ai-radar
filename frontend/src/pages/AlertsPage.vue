@@ -1,47 +1,15 @@
 <template>
-  <div class="alerts-app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark"><span class="brand-dot" /></div>
-        <span>AI Radar</span>
-      </div>
+  <section class="alerts-page">
+    <section class="status-panel" aria-label="告警状态">
+      <div class="status-title">告警状态 <span class="live">实时</span></div>
+      <div>规则数：<span>{{ subscriptions.length }}</span></div>
+      <div>当前列表：<span>{{ alerts.items.length }}</span></div>
+      <div>最新匹配：<span>{{ lastRun ? relativeTimeUtil(lastRun.completedAt) : "尚未运行" }}</span></div>
+      <button class="status-refresh" type="button" :disabled="matching" @click="triggerMatching">
+        {{ matching ? "正在匹配..." : "手动运行匹配" }}
+      </button>
+    </section>
 
-      <nav class="nav" aria-label="主导航">
-        <RouterLink class="nav-item" :to="{ name: 'clusters' }">热点榜单</RouterLink>
-        <div class="nav-item">数据源</div>
-        <RouterLink class="nav-item active" :to="{ name: 'alerts' }">订阅告警</RouterLink>
-        <RouterLink class="nav-item" :to="{ name: 'daily-reports' }">日报</RouterLink>
-        <div class="nav-item">评测</div>
-      </nav>
-
-      <section class="status-card">
-        <div class="status-title">告警状态 <span class="live">实时</span></div>
-        <div>规则数：<span>{{ subscriptions.length }}</span></div>
-        <div>当前列表：<span>{{ alerts.items.length }}</span></div>
-        <div>最新匹配：<span>{{ lastRun ? relativeTime(lastRun.completedAt) : "尚未运行" }}</span></div>
-        <button class="status-link status-link-button" type="button" :disabled="matching" @click="triggerMatching">
-          {{ matching ? "正在匹配..." : "手动运行匹配" }}
-        </button>
-      </section>
-
-      <section class="account">
-        <div class="avatar">A</div>
-        <div class="account-copy">
-          <div class="account-name">AI Radar 团队</div>
-          <span class="pill">Phase 6</span>
-        </div>
-      </section>
-    </aside>
-
-    <header class="topbar">
-      <div class="crumbs">
-        <RouterLink :to="{ name: 'clusters' }">热点榜单</RouterLink>
-        <span>/</span>
-        <span class="crumb-current">订阅告警</span>
-      </div>
-    </header>
-
-    <main class="main">
       <section class="hero">
         <div>
           <h1 class="page-title">订阅规则与告警</h1>
@@ -191,7 +159,7 @@
                     <div class="rule-meta">
                       <span class="pill">{{ alert.status }}</span>
                       <span>{{ alert.subscriptionName }}</span>
-                      <span>{{ relativeTime(alert.matchedAt) }}</span>
+                      <span>{{ relativeTimeUtil(alert.matchedAt) }}</span>
                       <span v-if="alert.hotScore != null">分数 {{ Math.round(alert.hotScore) }}</span>
                     </div>
                   </div>
@@ -232,8 +200,7 @@
           </section>
         </div>
       </section>
-    </main>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -249,9 +216,10 @@ import {
 } from "../shared/api/alerts";
 import type { AlertMatchingRun, AlertRecord, AlertStatus, PageResponse, SourceType, SubscriptionRule } from "../shared/api/contracts";
 import { getErrorMessage } from "../shared/api/errors";
+import { relativeTime as relativeTimeUtil } from "../shared/utils/datetime";
 import "../styles/alerts-page.css";
 
-const sourceOptions: SourceType[] = ["HACKER_NEWS", "ARXIV", "GITHUB"];
+const sourceOptions: SourceType[] = ["HACKER_NEWS", "ARXIV", "GITHUB", "HUGGING_FACE"];
 
 const subscriptions = ref<SubscriptionRule[]>([]);
 const alerts = ref<PageResponse<AlertRecord>>({
@@ -427,17 +395,9 @@ function matchedKeywordsText(matchReason: Record<string, unknown>): string {
 function sourceLabel(source: SourceType): string {
   if (source === "ARXIV") return "arXiv";
   if (source === "GITHUB") return "GitHub";
+  if (source === "HUGGING_FACE") return "Hugging Face";
   return "Hacker News";
 }
 
-function relativeTime(value: string): string {
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "--";
-  const diffMinutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
-  if (diffMinutes < 1) return "刚刚";
-  if (diffMinutes < 60) return `${diffMinutes} 分钟前`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} 小时前`;
-  return `${Math.floor(diffHours / 24)} 天前`;
-}
+
 </script>

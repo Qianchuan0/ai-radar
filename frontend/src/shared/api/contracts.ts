@@ -13,7 +13,7 @@ export interface PageResponse<T> {
     totalPages: number;
 }
 
-export type SourceType = "ARXIV" | "HACKER_NEWS" | "GITHUB";
+export type SourceType = "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE";
 export type HotClusterSort = "SCORE_DESC" | "LATEST";
 export type HotClusterStatus = "ACTIVE" | "MERGED" | "ARCHIVED";
 export type AnalysisRunStatus = "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED";

@@ -1,183 +1,75 @@
-.alerts-app {
+.alerts-page {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  min-height: 100vh;
-  background: #f3f5f8;
-  color: #172033;
+  gap: 16px;
 }
 
-.sidebar {
-  background: #101828;
-  color: #f8fafc;
-  padding: 24px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.brand,
-.nav,
-.account,
-.rule-row,
-.hero,
-.section-head,
-.filter-row,
-.form-actions,
-.action-row,
-.footer,
-.pager {
-  display: flex;
-  align-items: center;
-}
-
-.brand {
-  gap: 12px;
-  font-weight: 800;
-}
-
-.brand-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #ff7a59, #ffb347);
-}
-
-.brand-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: #fff;
-}
-
-.nav {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-}
-
-.nav-item {
-  color: #cbd5e1;
-  text-decoration: none;
-  padding: 10px 12px;
-  border-radius: 8px;
-}
-
-.nav-item.active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.status-card,
-.account {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 14px;
-}
-
-.status-card {
-  display: grid;
-  gap: 10px;
-}
-
-.status-title {
-  font-weight: 800;
-}
-
-.live,
-.pill,
-.chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-}
-
-.live {
-  margin-left: 8px;
-  background: rgba(34, 197, 94, 0.18);
-  color: #86efac;
-  padding: 2px 8px;
-  font-size: 12px;
-}
-
-.status-link-button,
-.primary-button,
-.secondary-button,
-.page {
-  cursor: pointer;
-}
-
-.status-link-button {
-  margin-top: 4px;
-  width: 100%;
-  border: 0;
+.status-panel {
+  padding: 16px 20px;
+  border: 1px solid #e5ebf3;
   border-radius: 8px;
   background: #fff;
-  color: #111827;
-  padding: 10px 12px;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.04);
+  color: #344054;
+  font-size: 13px;
   font-weight: 700;
 }
 
-.account {
-  margin-top: auto;
-  gap: 12px;
-}
-
-.account-copy {
-  min-width: 0;
-}
-
-.account-name {
+.status-panel .status-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: #18233f;
   font-size: 14px;
   font-weight: 900;
 }
 
-.avatar {
-  width: 38px;
-  height: 38px;
+.status-panel .live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
   border-radius: 999px;
-  background: #ffedd5;
-  color: #9a3412;
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-}
-
-.pill {
-  background: #fff2d9;
-  color: #9a3412;
-  padding: 2px 10px;
-  font-size: 12px;
+  background: #eaf8f0;
+  color: #14a160;
+  font-size: 11px;
   font-weight: 800;
 }
 
-.topbar {
-  grid-column: 2;
-  padding: 18px 28px 0;
+.status-panel .live::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #27c678;
 }
 
-.crumbs {
+.status-refresh {
+  margin-top: 12px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #1769f5;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #267aff, #075be7);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.status-refresh:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.hero,
+.section-head,
+.form-actions,
+.rule-row,
+.footer,
+.pager {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #667085;
-}
-
-.crumbs a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.crumb-current {
-  color: #172033;
-  font-weight: 700;
-}
-
-.main {
-  grid-column: 2;
-  padding: 20px 28px 32px;
 }
 
 .hero {
@@ -300,6 +192,7 @@
   padding: 10px 12px;
   font: inherit;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .primary-button {
@@ -346,6 +239,9 @@
 }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
   padding: 5px 10px;
   background: #eef2ff;
   color: #3730a3;
@@ -356,6 +252,17 @@
 .chip.neutral {
   background: #f3f4f6;
   color: #374151;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #e8f1ff;
+  color: #1769f5;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .alert-title a {
@@ -384,16 +291,6 @@
 }
 
 @media (max-width: 1100px) {
-  .alerts-app {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar,
-  .topbar,
-  .main {
-    grid-column: auto;
-  }
-
   .content-grid {
     grid-template-columns: 1fr;
   }

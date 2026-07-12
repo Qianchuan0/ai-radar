@@ -158,3 +158,21 @@
 - labeled evaluation dataset
 - quality metrics
 - evaluation report and error analysis
+
+## Phase 9A: Hugging Face Models Source + Source Connector Template
+
+**Status:** Completed
+
+### Goals
+
+- add Hugging Face Models as the fourth heterogeneous source
+- keep the integration inside the existing crawl-to-cluster closed loop
+- document a reusable connector checklist for future sources
+
+### Deliverables
+
+- Hugging Face models client, collector, and hot-item normalizer
+- `HUGGING_FACE` source configuration and manual crawl support
+- raw-item to hot-score integration coverage for the fourth source
+- source connector implementation template and documentation updates
+- Phase 9A acceptance script and acceptance note

@@ -93,6 +93,23 @@ Current Phase 4 fields:
 - `language`
 - `updated_at`
 
+### Hugging Face Models
+
+Purpose: monitor model ecosystem momentum and model-level adoption signals.
+
+Phase 9A fields:
+
+- `model_id`
+- `url`
+- `downloads`
+- `likes`
+- `pipeline_tag`
+- `tags`
+- `library_name`
+- `created_at`
+- `last_modified`
+- `private`
+
 ## MVP Functional Modules
 
 1. source configuration and enable/disable controls

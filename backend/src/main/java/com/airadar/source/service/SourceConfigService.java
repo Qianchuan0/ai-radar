@@ -112,6 +112,7 @@ public class SourceConfigService {
             case HACKER_NEWS -> validateHackerNewsConfig(config);
             case ARXIV -> validateArxivConfig(config);
             case GITHUB -> validateGitHubConfig(config);
+            case HUGGING_FACE -> validateHuggingFaceConfig(config);
         }
     }
 
@@ -200,6 +201,41 @@ public class SourceConfigService {
             throw new BusinessException(
                     ErrorCode.INVALID_ARGUMENT,
                     "GitHub order must be asc or desc."
+            );
+        }
+    }
+
+    private void validateHuggingFaceConfig(JsonNode config) {
+        String search = config.path("search").asText("").trim();
+        if (search.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Hugging Face search must not be blank."
+            );
+        }
+        int limit = config.path("limit").asInt(20);
+        if (limit < 1 || limit > 100) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Hugging Face limit must be between 1 and 100."
+            );
+        }
+        String sort = config.path("sort").asText("downloads").trim();
+        if (!sort.isBlank()
+                && !"downloads".equalsIgnoreCase(sort)
+                && !"likes".equalsIgnoreCase(sort)
+                && !"createdAt".equalsIgnoreCase(sort)
+                && !"lastModified".equalsIgnoreCase(sort)) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Hugging Face sort must be one of downloads, likes, createdAt, lastModified."
+            );
+        }
+        String direction = config.path("direction").asText("desc").trim();
+        if (!direction.isBlank() && !"asc".equalsIgnoreCase(direction) && !"desc".equalsIgnoreCase(direction)) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Hugging Face direction must be asc or desc."
             );
         }
     }

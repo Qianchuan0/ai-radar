@@ -1,167 +1,133 @@
 <template>
-  <div class="evaluation-app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark"><span class="brand-dot" /></div>
-        <span>AI Radar</span>
+  <section class="evaluation-page">
+    <section class="status-panel" aria-label="评测状态">
+      <div class="status-title">评测状态 <span class="live">手动</span></div>
+      <div>数据集：<span>{{ selectedDataset ? selectedDataset.name : "未选择" }}</span></div>
+      <div>最近运行：<span>{{ latestRun ? relativeTimeUtil(latestRun.finishedAt ?? latestRun.startedAt) : "尚未运行" }}</span></div>
+      <div>用例数：<span>{{ selectedDataset ? selectedDataset.caseCount : 0 }}</span></div>
+      <button class="status-refresh" type="button" :disabled="!canRun || running" @click="runEvaluation">
+        {{ running ? "运行中..." : "运行评测" }}
+      </button>
+    </section>
+
+    <section class="hero">
+      <div>
+        <h1 class="page-title">手动评测闭环</h1>
+        <p class="subtitle">
+          基于已标注用例，对持久化的采集、聚类、评分、分析和告警数据进行评测，查看通过率、失败与错误。
+        </p>
       </div>
 
-      <nav class="nav" aria-label="Primary">
-        <RouterLink class="nav-item" :to="{ name: 'clusters' }">Hot Clusters</RouterLink>
-        <div class="nav-item">Sources</div>
-        <RouterLink class="nav-item" :to="{ name: 'alerts' }">Alerts</RouterLink>
-        <RouterLink class="nav-item" :to="{ name: 'daily-reports' }">Daily Reports</RouterLink>
-        <RouterLink class="nav-item active" :to="{ name: 'evaluation' }">Evaluation</RouterLink>
-      </nav>
-
-      <section class="status-card">
-        <div class="status-title">Evaluation Status <span class="live">Manual</span></div>
-        <div>Dataset: <span>{{ selectedDataset ? selectedDataset.name : "None" }}</span></div>
-        <div>Latest run: <span>{{ latestRun ? relativeTime(latestRun.finishedAt ?? latestRun.startedAt) : "Not run yet" }}</span></div>
-        <div>Cases: <span>{{ selectedDataset ? selectedDataset.caseCount : 0 }}</span></div>
-        <button class="status-link-button" type="button" :disabled="!canRun || running" @click="runEvaluation">
-          {{ running ? "Running..." : "Run evaluation" }}
+      <div class="hero-actions">
+        <label class="dataset-field">
+          <span>数据集</span>
+          <select :value="selectedDatasetId" @change="onDatasetChange">
+            <option :value="0" disabled>选择数据集</option>
+            <option v-for="dataset in datasets" :key="dataset.id" :value="dataset.id">
+              {{ dataset.name }}（{{ dataset.caseCount }} 条用例）
+            </option>
+          </select>
+        </label>
+        <button class="primary-button" type="button" :disabled="!canRun || running" @click="runEvaluation">
+          {{ running ? "运行中..." : "立即运行" }}
         </button>
-      </section>
-
-      <section class="account">
-        <div class="avatar">A</div>
-        <div class="account-copy">
-          <div class="account-name">AI Radar Team</div>
-          <span class="pill">Phase 8</span>
-        </div>
-      </section>
-    </aside>
-
-    <header class="topbar">
-      <div class="crumbs">
-        <RouterLink :to="{ name: 'clusters' }">Hot Clusters</RouterLink>
-        <span>/</span>
-        <span class="crumb-current">Evaluation</span>
       </div>
-    </header>
+    </section>
 
-    <main class="main">
-      <section class="hero">
-        <div>
-          <h1 class="page-title">Manual evaluation loop</h1>
-          <p class="subtitle">
-            Run labeled cases against persisted crawl, cluster, score, analysis, and alert data.
-            Review pass rate, failures, and errors per case type.
-          </p>
-        </div>
+    <section v-if="pageError" class="state-banner error">{{ pageError }}</section>
+    <section v-else-if="latestRun" class="state-banner success">
+      最近一次运行 {{ latestRun.status }}，{{ latestRun.passedCases }}/{{ latestRun.totalCases }} 用例通过，
+      {{ relativeTimeUtil(latestRun.finishedAt ?? latestRun.startedAt) }}。
+    </section>
 
-        <div class="hero-actions">
-          <label class="dataset-field">
-            <span>Dataset</span>
-            <select :value="selectedDatasetId" @change="onDatasetChange">
-              <option :value="0" disabled>Select a dataset</option>
-              <option v-for="dataset in datasets" :key="dataset.id" :value="dataset.id">
-                {{ dataset.name }} ({{ dataset.caseCount }} cases)
-              </option>
-            </select>
-          </label>
-          <button class="primary-button" type="button" :disabled="!canRun || running" @click="runEvaluation">
-            {{ running ? "Running..." : "Run now" }}
-          </button>
-        </div>
-      </section>
-
-      <section v-if="pageError" class="state-banner error">{{ pageError }}</section>
-      <section v-else-if="latestRun" class="state-banner success">
-        Latest run {{ latestRun.status }} with {{ latestRun.passedCases }}/{{ latestRun.totalCases }} cases passing
-        {{ relativeTime(latestRun.finishedAt ?? latestRun.startedAt) }}.
-      </section>
-
-      <section v-if="metrics" class="metric-grid">
-        <div class="metric-card">
-          <div class="metric-label">Pass rate</div>
-          <div class="metric-value">{{ formatPercent(metrics.passRate) }}</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Total cases</div>
-          <div class="metric-value">{{ metrics.totalCases }}</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Failed</div>
-          <div class="metric-value fail">{{ metrics.failedCases }}</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Errors</div>
-          <div class="metric-value error">{{ metrics.errorCases }}</div>
-        </div>
-      </section>
-
-      <div class="content-grid">
-        <section class="panel">
-          <div class="section-head">
-            <h2>By case type</h2>
-            <span class="subtle">{{ byCaseTypeEntries.length }} types</span>
-          </div>
-
-          <div v-if="!selectedDataset" class="empty-state">Select a dataset to view its evaluation metrics.</div>
-          <div v-else-if="!metrics" class="empty-state">No run yet. Trigger an evaluation to see metrics.</div>
-          <table v-else class="case-type-table">
-            <thead>
-              <tr>
-                <th>Case type</th>
-                <th>Total</th>
-                <th>Passed</th>
-                <th>Failed</th>
-                <th>Errors</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="entry in byCaseTypeEntries" :key="entry.type">
-                <td>{{ entry.type }}</td>
-                <td>{{ entry.total }}</td>
-                <td>{{ entry.passed }}</td>
-                <td>{{ entry.failed }}</td>
-                <td>{{ entry.error }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-
-        <section class="panel">
-          <div class="section-head">
-            <h2>Failed and error cases</h2>
-            <span class="subtle">{{ failedOrErrorResults.length }} cases</span>
-          </div>
-
-          <div v-if="!selectedDataset" class="empty-state">Select a dataset to inspect evaluation outcomes.</div>
-          <div v-else-if="!runDetail" class="empty-state">No run detail available yet.</div>
-          <div v-else-if="failedOrErrorResults.length === 0" class="empty-state">
-            All cases passed in the latest run.
-          </div>
-          <div v-else class="case-list">
-            <article v-for="result in failedOrErrorResults" :key="result.id" class="case-card">
-              <div class="case-head">
-                <div>
-                  <div class="case-code">{{ result.caseCode }}</div>
-                  <div class="case-meta">{{ result.caseType }} · evaluated {{ formatDateTime(result.evaluatedAt) }}</div>
-                </div>
-                <span class="status-badge" :class="result.status">{{ result.status }}</span>
-              </div>
-              <p v-if="result.failureReason" class="case-reason" :class="{ error: result.status === 'ERROR' }">
-                {{ result.failureReason }}
-              </p>
-              <div class="payload-box">
-                <div class="payload-block">
-                  <div class="payload-title">Actual payload</div>
-                  <pre class="payload-json">{{ formatPayload(result.actualPayload) }}</pre>
-                </div>
-                <div class="payload-block">
-                  <div class="payload-title">Expected payload</div>
-                  <pre class="payload-json">{{ formatPayload(expectedPayloadFor(result.caseId)) }}</pre>
-                </div>
-              </div>
-            </article>
-          </div>
-        </section>
+    <section v-if="metrics" class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">通过率</div>
+        <div class="metric-value">{{ formatPercent(metrics.passRate) }}</div>
       </div>
-    </main>
-  </div>
+      <div class="metric-card">
+        <div class="metric-label">用例总数</div>
+        <div class="metric-value">{{ metrics.totalCases }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">失败</div>
+        <div class="metric-value fail">{{ metrics.failedCases }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">错误</div>
+        <div class="metric-value error">{{ metrics.errorCases }}</div>
+      </div>
+    </section>
+
+    <div class="content-grid">
+      <section class="panel">
+        <div class="section-head">
+          <h2>按用例类型</h2>
+          <span class="subtle">{{ byCaseTypeEntries.length }} 种</span>
+        </div>
+
+        <div v-if="!selectedDataset" class="empty-state">选择数据集以查看评测指标。</div>
+        <div v-else-if="!metrics" class="empty-state">还没有运行记录，触发一次评测查看指标。</div>
+        <table v-else class="case-type-table">
+          <thead>
+            <tr>
+              <th>用例类型</th>
+              <th>总数</th>
+              <th>通过</th>
+              <th>失败</th>
+              <th>错误</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="entry in byCaseTypeEntries" :key="entry.type">
+              <td>{{ entry.type }}</td>
+              <td>{{ entry.total }}</td>
+              <td>{{ entry.passed }}</td>
+              <td>{{ entry.failed }}</td>
+              <td>{{ entry.error }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>失败与错误用例</h2>
+          <span class="subtle">{{ failedOrErrorResults.length }} 条</span>
+        </div>
+
+        <div v-if="!selectedDataset" class="empty-state">选择数据集以查看评测结果。</div>
+        <div v-else-if="!runDetail" class="empty-state">暂无运行详情。</div>
+        <div v-else-if="failedOrErrorResults.length === 0" class="empty-state">
+          最近一次运行全部用例通过。
+        </div>
+        <div v-else class="case-list">
+          <article v-for="result in failedOrErrorResults" :key="result.id" class="case-card">
+            <div class="case-head">
+              <div>
+                <div class="case-code">{{ result.caseCode }}</div>
+                <div class="case-meta">{{ result.caseType }} · 评测于 {{ formatDateTimeUtil(result.evaluatedAt) }}</div>
+              </div>
+              <span class="status-badge" :class="result.status">{{ result.status }}</span>
+            </div>
+            <p v-if="result.failureReason" class="case-reason" :class="{ error: result.status === 'ERROR' }">
+              {{ result.failureReason }}
+            </p>
+            <div class="payload-box">
+              <div class="payload-block">
+                <div class="payload-title">实际结果</div>
+                <pre class="payload-json">{{ formatPayload(result.actualPayload) }}</pre>
+              </div>
+              <div class="payload-block">
+                <div class="payload-title">期望结果</div>
+                <pre class="payload-json">{{ formatPayload(expectedPayloadFor(result.caseId)) }}</pre>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -181,6 +147,7 @@ import type {
     EvaluationRun,
     EvaluationRunSummary
 } from "../shared/api/contracts";
+import { formatDateTime as formatDateTimeUtil, relativeTime as relativeTimeUtil } from "../shared/utils/datetime";
 import "../styles/evaluation-page.css";
 
 interface CaseTypeMetric {
@@ -315,27 +282,6 @@ function formatPercent(value: number | undefined): string {
         return "--";
     }
     return `${(value * 100).toFixed(1)}%`;
-}
-
-function formatDateTime(value: string): string {
-    const date = new Date(value);
-    return Number.isFinite(date.getTime()) ? date.toLocaleString() : "--";
-}
-
-function relativeTime(value: string | null): string {
-    if (!value) {
-        return "--";
-    }
-    const timestamp = new Date(value).getTime();
-    if (!Number.isFinite(timestamp)) {
-        return "--";
-    }
-    const diffMinutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
-    if (diffMinutes < 1) return "just now";
-    if (diffMinutes < 60) return `${diffMinutes} min ago`;
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} h ago`;
-    return `${Math.floor(diffHours / 24)} d ago`;
 }
 
 function formatPayload(payload: Record<string, unknown> | null): string {

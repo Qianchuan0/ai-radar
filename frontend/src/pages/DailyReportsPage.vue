@@ -1,182 +1,146 @@
 <template>
-  <div class="reports-app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark"><span class="brand-dot" /></div>
-        <span>AI Radar</span>
+  <section class="reports-page">
+    <section class="status-panel" aria-label="报告状态">
+      <div class="status-title">报告状态 <span class="live">手动</span></div>
+      <div>所选日期：<span>{{ selectedDate }}</span></div>
+      <div>最近生成：<span>{{ lastRun ? relativeTimeUtil(lastRun.generatedAt) : "尚未生成" }}</span></div>
+      <div>历史数量：<span>{{ history.totalElements }}</span></div>
+      <button class="status-refresh" type="button" :disabled="generating" @click="runReport">
+        {{ generating ? "生成中..." : "生成报告" }}
+      </button>
+    </section>
+
+    <section class="hero">
+      <div>
+        <h1 class="page-title">基于证据的日报</h1>
+        <p class="subtitle">从已持久化的 cluster、score、evidence 和最新结构化分析生成每日快照。</p>
       </div>
-
-      <nav class="nav" aria-label="Primary">
-        <RouterLink class="nav-item" :to="{ name: 'clusters' }">Hot Clusters</RouterLink>
-        <div class="nav-item">Sources</div>
-        <RouterLink class="nav-item" :to="{ name: 'alerts' }">Alerts</RouterLink>
-        <RouterLink class="nav-item active" :to="{ name: 'daily-reports' }">Daily Reports</RouterLink>
-        <RouterLink class="nav-item" :to="{ name: 'evaluation' }">Evaluation</RouterLink>
-      </nav>
-
-      <section class="status-card">
-        <div class="status-title">Report Status <span class="live">Manual</span></div>
-        <div>Selected date: <span>{{ selectedDate }}</span></div>
-        <div>Latest run: <span>{{ lastRun ? relativeTime(lastRun.generatedAt) : "Not generated yet" }}</span></div>
-        <div>History items: <span>{{ history.totalElements }}</span></div>
-        <button class="status-link-button" type="button" :disabled="generating" @click="runReport">
-          {{ generating ? "Generating..." : "Generate report" }}
+      <div class="hero-actions">
+        <label class="date-field">
+          <span>日期</span>
+          <input v-model="selectedDate" type="date" @change="loadReportOnly" />
+        </label>
+        <button class="primary-button" type="button" :disabled="generating" @click="runReport">
+          {{ generating ? "生成中..." : "生成" }}
         </button>
-      </section>
-
-      <section class="account">
-        <div class="avatar">A</div>
-        <div class="account-copy">
-          <div class="account-name">AI Radar Team</div>
-          <span class="pill">Phase 7</span>
-        </div>
-      </section>
-    </aside>
-
-    <header class="topbar">
-      <div class="crumbs">
-        <RouterLink :to="{ name: 'clusters' }">Hot Clusters</RouterLink>
-        <span>/</span>
-        <span class="crumb-current">Daily Reports</span>
       </div>
-    </header>
+    </section>
 
-    <main class="main">
-      <section class="hero">
-        <div>
-          <h1 class="page-title">Evidence-backed daily report</h1>
-          <p class="subtitle">
-            Build a daily snapshot from persisted clusters, scores, evidence, and the latest stored structured analysis.
-          </p>
-        </div>
+    <section v-if="pageError" class="state-banner error">{{ pageError }}</section>
+    <section v-else-if="lastRun" class="state-banner success">
+      为 {{ lastRun.reportDate }} 生成了 {{ lastRun.clusterCount }} 个 cluster，{{ relativeTimeUtil(lastRun.generatedAt) }}。
+    </section>
 
-        <div class="hero-actions">
-          <label class="date-field">
-            <span>Date</span>
-            <input v-model="selectedDate" type="date" @change="loadReportOnly" />
-          </label>
-          <button class="primary-button" type="button" :disabled="generating" @click="runReport">
-            {{ generating ? "Generating..." : "Generate" }}
-          </button>
-        </div>
-      </section>
+    <section class="content-grid">
+      <div class="column">
+        <section class="panel">
+          <div class="section-head">
+            <h2>报告内容</h2>
+            <span class="subtle">{{ report ? report.status : "未生成" }}</span>
+          </div>
 
-      <section v-if="pageError" class="state-banner error">{{ pageError }}</section>
-      <section v-else-if="lastRun" class="state-banner success">
-        Generated {{ lastRun.clusterCount }} clusters for {{ lastRun.reportDate }} {{ relativeTime(lastRun.generatedAt) }}.
-      </section>
+          <div v-if="reportLoading" class="empty-state">正在加载报告快照...</div>
+          <div v-else-if="report" class="report-card">
+            <div class="report-meta">
+              <span class="pill">{{ report.reportDate }}</span>
+              <span>{{ report.clusterCount }} 个 cluster</span>
+              <span>{{ formatDateTimeUtil(report.generatedAt) }}</span>
+            </div>
+            <h3 class="report-title">{{ report.title }}</h3>
+            <p class="report-summary">{{ report.summary }}</p>
 
-      <section class="content-grid">
-        <div class="column">
-          <section class="panel">
-            <div class="section-head">
-              <h2>Report output</h2>
-              <span class="subtle">{{ report ? report.status : "Missing" }}</span>
+            <div v-if="report.clusters.length === 0" class="empty-state compact">
+              当天没有捕获到活跃 cluster。
             </div>
 
-            <div v-if="reportLoading" class="empty-state">Loading report snapshot...</div>
-            <div v-else-if="report" class="report-card">
-              <div class="report-meta">
-                <span class="pill">{{ report.reportDate }}</span>
-                <span>{{ report.clusterCount }} clusters</span>
-                <span>{{ formatDateTime(report.generatedAt) }}</span>
-              </div>
-              <h3 class="report-title">{{ report.title }}</h3>
-              <p class="report-summary">{{ report.summary }}</p>
-
-              <div v-if="report.clusters.length === 0" class="empty-state compact">
-                No active clusters were captured for this day.
-              </div>
-
-              <div v-else class="cluster-list">
-                <article v-for="cluster in report.clusters" :key="cluster.hotClusterId" class="cluster-card">
-                  <div class="cluster-row">
-                    <div>
-                      <RouterLink class="cluster-link" :to="{ name: 'cluster-detail', params: { clusterId: cluster.hotClusterId } }">
-                        {{ cluster.title }}
-                      </RouterLink>
-                      <div class="cluster-meta">
-                        <span>{{ cluster.score ? Math.round(cluster.score.total) : 0 }} score</span>
-                        <span>{{ cluster.itemCount }} evidence items</span>
-                        <span>{{ formatDateTime(cluster.lastSeenAt) }}</span>
-                      </div>
-                    </div>
-                    <div class="chips">
-                      <span v-for="source in cluster.sourceTypes" :key="source" class="chip">{{ sourceLabel(source) }}</span>
+            <div v-else class="cluster-list">
+              <article v-for="cluster in report.clusters" :key="cluster.hotClusterId" class="cluster-card">
+                <div class="cluster-row">
+                  <div>
+                    <RouterLink class="cluster-link" :to="{ name: 'cluster-detail', params: { clusterId: cluster.hotClusterId } }">
+                      {{ cluster.title }}
+                    </RouterLink>
+                    <div class="cluster-meta">
+                      <span>{{ cluster.score ? Math.round(cluster.score.total) : 0 }} 热度分</span>
+                      <span>{{ cluster.itemCount }} 条证据</span>
+                      <span>{{ formatDateTimeUtil(cluster.lastSeenAt) }}</span>
                     </div>
                   </div>
-
-                  <p class="cluster-summary">{{ cluster.summary || "No summary stored for this cluster." }}</p>
-
-                  <div class="score-box" v-if="cluster.score">
-                    <div class="score-head">
-                      <strong>Score breakdown</strong>
-                      <span>{{ cluster.score.version }}</span>
-                    </div>
-                    <div class="score-components">
-                      <div v-for="component in scoreComponents(cluster.score.components)" :key="component.label" class="score-component">
-                        <span>{{ component.label }}</span>
-                        <span>{{ component.value }}</span>
-                      </div>
-                    </div>
+                  <div class="chips">
+                    <span v-for="source in cluster.sourceTypes" :key="source" class="chip">{{ sourceLabel(source) }}</span>
                   </div>
-
-                  <div class="analysis-box" v-if="cluster.latestAnalysis?.result">
-                    <div class="analysis-head">
-                      <strong>Latest analysis</strong>
-                      <span>{{ formatDateTime(cluster.latestAnalysis.createdAt) }}</span>
-                    </div>
-                    <div class="analysis-title">{{ cluster.latestAnalysis.result.headline }}</div>
-                    <p class="analysis-brief">{{ cluster.latestAnalysis.result.brief }}</p>
-                  </div>
-                </article>
-              </div>
-            </div>
-            <div v-else class="empty-state">
-              No report exists for {{ selectedDate }} yet. Generate one from the current persisted clusters.
-            </div>
-          </section>
-        </div>
-
-        <div class="column">
-          <section class="panel">
-            <div class="section-head">
-              <h2>History</h2>
-              <span class="subtle">{{ history.totalElements }} total</span>
-            </div>
-
-            <div v-if="historyLoading" class="empty-state">Loading history...</div>
-            <div v-else-if="history.items.length === 0" class="empty-state">No daily reports have been generated yet.</div>
-            <div v-else class="history-list">
-              <button
-                v-for="item in history.items"
-                :key="item.id"
-                class="history-card"
-                :class="{ active: item.reportDate === selectedDate }"
-                type="button"
-                @click="selectHistory(item.reportDate)"
-              >
-                <div class="history-row">
-                  <strong>{{ item.reportDate }}</strong>
-                  <span>{{ item.clusterCount }} clusters</span>
                 </div>
-                <div class="history-summary">{{ item.summary }}</div>
-                <div class="history-time">{{ formatDateTime(item.generatedAt) }}</div>
-              </button>
-            </div>
 
-            <footer class="footer" v-if="history.totalPages > 1">
-              <div>Total {{ history.totalElements }}</div>
-              <div class="pager">
-                <button class="page" :disabled="historyPage <= 1" type="button" @click="changeHistoryPage(historyPage - 1)">Prev</button>
-                <button class="page" :disabled="historyPage >= history.totalPages" type="button" @click="changeHistoryPage(historyPage + 1)">Next</button>
+                <p class="cluster-summary">{{ cluster.summary || "该 cluster 暂无摘要。" }}</p>
+
+                <div class="score-box" v-if="cluster.score">
+                  <div class="score-head">
+                    <strong>评分明细</strong>
+                    <span>{{ cluster.score.version }}</span>
+                  </div>
+                  <div class="score-components">
+                    <div v-for="component in scoreComponents(cluster.score.components)" :key="component.label" class="score-component">
+                      <span>{{ component.label }}</span>
+                      <span>{{ component.value }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="analysis-box" v-if="cluster.latestAnalysis?.result">
+                  <div class="analysis-head">
+                    <strong>最新分析</strong>
+                    <span>{{ formatDateTimeUtil(cluster.latestAnalysis.createdAt) }}</span>
+                  </div>
+                  <div class="analysis-title">{{ cluster.latestAnalysis.result.headline }}</div>
+                  <p class="analysis-brief">{{ cluster.latestAnalysis.result.brief }}</p>
+                </div>
+              </article>
+            </div>
+          </div>
+          <div v-else class="empty-state">
+            {{ selectedDate }} 还没有报告，可基于当前持久化的 cluster 生成。
+          </div>
+        </section>
+      </div>
+
+      <div class="column">
+        <section class="panel">
+          <div class="section-head">
+            <h2>历史报告</h2>
+            <span class="subtle">共 {{ history.totalElements }} 条</span>
+          </div>
+
+          <div v-if="historyLoading" class="empty-state">正在加载历史...</div>
+          <div v-else-if="history.items.length === 0" class="empty-state">还没有生成过日报。</div>
+          <div v-else class="history-list">
+            <button
+              v-for="item in history.items"
+              :key="item.id"
+              class="history-card"
+              :class="{ active: item.reportDate === selectedDate }"
+              type="button"
+              @click="selectHistory(item.reportDate)"
+            >
+              <div class="history-row">
+                <strong>{{ item.reportDate }}</strong>
+                <span>{{ item.clusterCount }} 个 cluster</span>
               </div>
-            </footer>
-          </section>
-        </div>
-      </section>
-    </main>
-  </div>
+              <div class="history-summary">{{ item.summary }}</div>
+              <div class="history-time">{{ formatDateTimeUtil(item.generatedAt) }}</div>
+            </button>
+          </div>
+
+          <footer class="footer" v-if="history.totalPages > 1">
+            <div>共 {{ history.totalElements }} 条</div>
+            <div class="pager">
+              <button class="page" :disabled="historyPage <= 1" type="button" @click="changeHistoryPage(historyPage - 1)">上一页</button>
+              <button class="page" :disabled="historyPage >= history.totalPages" type="button" @click="changeHistoryPage(historyPage + 1)">下一页</button>
+            </div>
+          </footer>
+        </section>
+      </div>
+    </section>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -191,6 +155,7 @@ import type {
   PageResponse,
   SourceType
 } from "../shared/api/contracts";
+import { formatDateTime as formatDateTimeUtil, relativeTime as relativeTimeUtil } from "../shared/utils/datetime";
 import "../styles/daily-reports-page.css";
 
 const selectedDate = ref(todayDate());
@@ -270,26 +235,10 @@ function todayDate(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return "--";
-  return date.toLocaleString();
-}
-
-function relativeTime(value: string): string {
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "--";
-  const diffMinutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
-  if (diffMinutes < 1) return "just now";
-  if (diffMinutes < 60) return `${diffMinutes} min ago`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} h ago`;
-  return `${Math.floor(diffHours / 24)} d ago`;
-}
-
 function sourceLabel(source: SourceType): string {
   if (source === "ARXIV") return "arXiv";
   if (source === "GITHUB") return "GitHub";
+  if (source === "HUGGING_FACE") return "Hugging Face";
   return "Hacker News";
 }
 

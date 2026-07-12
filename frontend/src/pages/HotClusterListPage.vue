@@ -1,63 +1,20 @@
 <template>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark"><span class="brand-dot" /></div>
-        <span>AI Radar</span>
+  <section class="list-page">
+    <section class="status-panel" aria-label="数据更新">
+      <div class="status-title">数据更新 <span class="live">实时</span></div>
+      <div>最后刷新：<span>{{ generatedAtLabel }}</span></div>
+      <div class="status-sources">
+        <span class="status-sources-label">数据来源：</span>
+        <span v-for="source in sourceStatusRows" :key="source.name" class="status-source">
+          {{ source.name }}
+        </span>
       </div>
+      <button class="status-refresh" type="button" :disabled="loading" @click="reload">
+        {{ loading ? "加载中..." : "刷新真实数据" }}
+      </button>
+    </section>
 
-      <nav class="nav" aria-label="主导航">
-        <div class="nav-item"><span>仪表盘</span></div>
-        <div class="nav-item active"><span>热点榜单</span></div>
-        <div class="nav-item"><span>数据源</span></div>
-        <RouterLink class="nav-item" :to="{ name: 'alerts' }"><span>订阅告警</span></RouterLink>
-        <RouterLink class="nav-item" :to="{ name: 'daily-reports' }"><span>日报</span></RouterLink>
-        <div class="nav-item"><span>评测</span></div>
-        <div class="nav-item"><span>系统设置</span></div>
-      </nav>
-
-      <section class="status-card" aria-label="数据更新">
-        <div class="status-title">数据更新 <span class="live">实时</span></div>
-        <div>最后刷新：<span>{{ generatedAtLabel }}</span></div>
-        <div style="margin-top:12px;font-weight:800;">数据来源：</div>
-        <div class="source-list">
-          <div v-for="source in sourceStatusRows" :key="source.name" class="source-row">
-            <span class="source-icon" :class="sourceClass(source.name)">{{ sourceLetter(source.name) }}</span>
-            {{ source.name }}
-          </div>
-        </div>
-        <button class="status-link status-link-button" type="button" @click="reload">
-          刷新真实数据
-        </button>
-      </section>
-
-      <section class="account">
-        <div class="avatar">A</div>
-        <div class="account-copy">
-          <div class="account-name">AI Radar 团队</div>
-          <span class="pill">MVP</span>
-        </div>
-      </section>
-    </aside>
-
-    <header class="topbar">
-      <div class="crumbs">
-        <span>热点榜单</span>
-        <span>/</span>
-        <span class="crumb-current">事件级热点</span>
-      </div>
-
-      <div class="top-actions">
-        <form class="search-shell" @submit.prevent="applyFilters">
-          <input v-model.trim="draft.q" type="search" placeholder="搜索标题或摘要" autocomplete="off" />
-          <kbd class="kbd">⌘ K</kbd>
-        </form>
-        <div class="avatar" style="width:34px;height:34px;font-size:16px;">A</div>
-      </div>
-    </header>
-
-    <main class="main">
-      <h1 class="page-title">事件级热点榜单</h1>
+    <h1 class="page-title">事件级热点榜单</h1>
       <div class="subtitle">展示真实 hot_cluster 数据，并在前端做轻量筛选与排序。</div>
 
       <section class="filter-panel">
@@ -70,6 +27,7 @@
                 <option value="HACKER_NEWS">Hacker News</option>
                 <option value="ARXIV">arXiv</option>
                 <option value="GITHUB">GitHub</option>
+                <option value="HUGGING_FACE">Hugging Face</option>
               </select>
             </div>
           </label>
@@ -257,7 +215,7 @@
                   </div>
                 </td>
                 <td><span class="count">{{ row.itemCount }}</span></td>
-                <td><span class="time">{{ relativeTime(row.lastSeenAt) }}</span></td>
+                <td><span class="time">{{ relativeTimeUtil(row.lastSeenAt) }}</span></td>
                 <td>
                   <RouterLink class="detail-jump" :to="{ name: 'cluster-detail', params: { clusterId: row.id }, query: buildHotClusterQuery(filters) }">→</RouterLink>
                 </td>
@@ -291,8 +249,7 @@
           </footer>
         </template>
       </section>
-    </main>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -302,6 +259,7 @@ import type { HotClusterSummary } from "../shared/api/contracts";
 import { getErrorMessage } from "../shared/api/errors";
 import { fetchHotClusters } from "../shared/api/hotClusters";
 import { buildHotClusterQuery, parseHotClusterFilters, resetHotClusterFilters, toHotClusterListQuery } from "../shared/utils/query";
+import { relativeTime as relativeTimeUtil } from "../shared/utils/datetime";
 import "../styles/hot-cluster-list.css";
 
 const route = useRoute();
@@ -338,7 +296,7 @@ const averageScore = computed(() => {
 });
 const topScore = computed(() => Math.max(0, ...filteredRows.value.map((item) => Number(item.score?.total ?? 0))));
 const freshCount = computed(() => filteredRows.value.filter((item) => isFresh(item.lastSeenAt)).length);
-const generatedAtLabel = computed(() => generatedAt.value ? relativeTime(generatedAt.value) : "等待加载");
+const generatedAtLabel = computed(() => generatedAt.value ? relativeTimeUtil(generatedAt.value) : "等待加载");
 const sourceStatusRows = computed(() => {
   const values = new Set(filteredRows.value.flatMap((item) => item.sourceTypes.map(sourceTypeLabel)));
   return Array.from(values.size ? values : new Set(["Hacker News"])).map((name) => ({ name }));
@@ -387,9 +345,10 @@ function primarySourceName(item: HotClusterSummary): string {
   return sourceTypeLabel(item.sourceTypes[0] ?? "HACKER_NEWS");
 }
 
-function sourceTypeLabel(sourceType: "ARXIV" | "HACKER_NEWS" | "GITHUB"): string {
+function sourceTypeLabel(sourceType: "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE"): string {
   if (sourceType === "ARXIV") return "arXiv";
   if (sourceType === "GITHUB") return "GitHub";
+  if (sourceType === "HUGGING_FACE") return "Hugging Face";
   return "Hacker News";
 }
 
@@ -422,17 +381,6 @@ function impactText(score?: number | null): string {
   return "低";
 }
 
-function relativeTime(value: string): string {
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "--";
-  const diffMinutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
-  if (diffMinutes < 1) return "刚刚";
-  if (diffMinutes < 60) return `${diffMinutes} 分钟前`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} 小时前`;
-  return `${Math.floor(diffHours / 24)} 天前`;
-}
-
 function isFresh(value: string): boolean {
   const timestamp = new Date(value).getTime();
   return Number.isFinite(timestamp) && Date.now() - timestamp <= 24 * 60 * 60 * 1000;
@@ -448,23 +396,15 @@ function medalClass(rank: number): string {
 function sourceClass(name: string): string {
   if (name === "arXiv") return "arxiv";
   if (name === "GitHub") return "github";
+  if (name === "Hugging Face") return "github";
   return "hn";
 }
 
 function sourceLetter(name: string): string {
   if (name === "arXiv") return "X";
   if (name === "GitHub") return "G";
+  if (name === "Hugging Face") return "H";
   return "Y";
 }
 </script>
 
-<style scoped>
-.status-link-button {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
-}
-</style>

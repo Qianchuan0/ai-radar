@@ -1,58 +1,17 @@
 <template>
-  <div>
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark"><span class="brand-dot" /></div>
-        <span>AI Radar</span>
+  <section class="detail-page">
+    <section class="status-panel" aria-label="数据更新">
+      <div class="status-title">数据更新 <span class="live">实时</span></div>
+      <div>最后刷新：<span>{{ generatedAt ? relativeTimeUtil(generatedAt) : "等待加载" }}</span></div>
+      <div class="status-sources">
+        <span class="status-sources-label">证据来源：</span>
+        <span v-for="source in sourceStatus" :key="source.name" class="status-source">
+          {{ source.name }}
+        </span>
       </div>
+      <button class="status-refresh" type="button" @click="reload">刷新详情</button>
+    </section>
 
-      <nav class="nav" aria-label="主导航">
-        <RouterLink class="nav-item active" :to="{ name: 'clusters', query: listQuery }">热点榜单</RouterLink>
-        <div class="nav-item">数据源</div>
-        <RouterLink class="nav-item" :to="{ name: 'alerts' }">订阅告警</RouterLink>
-        <RouterLink class="nav-item" :to="{ name: 'daily-reports' }">日报</RouterLink>
-        <div class="nav-item">评测</div>
-      </nav>
-
-      <section class="status-card">
-        <div class="status-title">数据更新 <span class="live">实时</span></div>
-        <div>最后刷新：<span>{{ generatedAt ? relativeTime(generatedAt) : "等待加载" }}</span></div>
-        <div style="margin-top:12px;font-weight:900;">证据来源：</div>
-        <div class="source-list">
-          <div v-for="source in sourceStatus" :key="source.name" class="source-row">
-            <span class="source-icon" :class="sourceClass(source.name)">{{ sourceLetter(source.name) }}</span>
-            {{ source.name }}
-          </div>
-        </div>
-        <button class="status-link status-link-button" type="button" @click="reload">刷新详情</button>
-      </section>
-
-      <section class="account">
-        <div class="avatar">A</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:900;color:#1b2540;">AI Radar 团队</div>
-          <span class="pill">MVP</span>
-        </div>
-      </section>
-    </aside>
-
-    <header class="topbar">
-      <div class="crumbs">
-        <RouterLink :to="{ name: 'clusters', query: listQuery }">热点榜单</RouterLink>
-        <span>/</span>
-        <span class="crumb-current">热点详情</span>
-      </div>
-
-      <div class="top-actions">
-        <form class="search-shell" @submit.prevent="goBackToListWithSearch">
-          <input v-model.trim="searchDraft" type="search" placeholder="返回列表并带着关键词搜索" />
-          <kbd class="kbd">⌘ K</kbd>
-        </form>
-        <div class="avatar" style="width:34px;height:34px;font-size:16px;">A</div>
-      </div>
-    </header>
-
-    <main class="main">
       <section v-if="loading" class="state panel">
         <div>
           <strong>正在加载热点详情</strong>
@@ -91,11 +50,11 @@
               </div>
               <div class="hero-meta">
                 <span>首次出现</span>
-                <strong>{{ formatDateTime(view.firstSeenAt) }}</strong>
+                <strong>{{ formatDateTimeUtil(view.firstSeenAt) }}</strong>
               </div>
               <div class="hero-meta">
                 <span>最近更新</span>
-                <strong>{{ formatDateTime(view.lastSeenAt) }}</strong>
+                <strong>{{ formatDateTimeUtil(view.lastSeenAt) }}</strong>
               </div>
             </div>
 
@@ -159,7 +118,7 @@
                 <div class="metric-mini">
                   <div>
                     <div class="metric-label">最近更新</div>
-                    <div class="metric-value">{{ relativeTime(view.lastSeenAt) }}</div>
+                    <div class="metric-value">{{ relativeTimeUtil(view.lastSeenAt) }}</div>
                   </div>
                 </div>
               </div>
@@ -167,32 +126,32 @@
 
             <section class="card panel analysis-card">
               <div class="analysis-header">
-                <h2 class="card-title">Structured analysis</h2>
+                <h2 class="card-title">结构化分析</h2>
                 <button class="outline-button" type="button" :disabled="analysisLoading || analysisTriggering" @click="runAnalysis">
-                  {{ analysisTriggering ? "Generating..." : "Generate analysis" }}
+                  {{ analysisTriggering ? "生成中..." : "生成分析" }}
                 </button>
               </div>
-              <div v-if="analysisLoading" class="analysis-state">Loading the latest structured analysis.</div>
+              <div v-if="analysisLoading" class="analysis-state">正在加载最新的结构化分析。</div>
               <div v-else-if="analysisError" class="analysis-state analysis-error">{{ analysisError }}</div>
               <div v-else-if="analysis?.status === 'FAILED'" class="analysis-state analysis-error">
-                {{ analysis.failureMessage || "Structured analysis failed." }}
+                {{ analysis.failureMessage || "结构化分析失败。" }}
               </div>
               <div v-else-if="analysis?.result" class="analysis-body">
                 <div class="analysis-meta">
-                  <span class="pill">Confidence {{ analysis.result.confidence }}</span>
-                  <span class="analysis-subtle">{{ formatDateTime(analysis.createdAt) }}</span>
+                  <span class="pill">置信度 {{ analysis.result.confidence }}</span>
+                  <span class="analysis-subtle">{{ formatDateTimeUtil(analysis.createdAt) }}</span>
                 </div>
                 <h3 class="analysis-headline">{{ analysis.result.headline }}</h3>
                 <p class="paragraph">{{ analysis.result.brief }}</p>
                 <p class="paragraph analysis-why">{{ analysis.result.whyItMatters }}</p>
                 <div class="analysis-block">
-                  <strong>Key signals</strong>
+                  <strong>关键信号</strong>
                   <ul class="bullets">
                     <li v-for="signal in analysis.result.keySignals" :key="signal">{{ signal }}</li>
                   </ul>
                 </div>
                 <div class="analysis-block">
-                  <strong>Evidence refs</strong>
+                  <strong>证据引用</strong>
                   <div class="analysis-links">
                     <a
                       v-for="refItem in analysis.result.evidenceRefs"
@@ -207,7 +166,7 @@
                   </div>
                 </div>
               </div>
-              <div v-else class="analysis-state">No structured analysis yet. Generate one from the current evidence pack.</div>
+              <div v-else class="analysis-state">暂无结构化分析，可基于当前证据生成。</div>
             </section>
           </div>
         </section>
@@ -250,7 +209,7 @@
                   <a class="evidence-title" :href="safeUrl(item.sourceUrl)" target="_blank" rel="noreferrer">{{ item.title }}</a>
                   <div>{{ item.summary || matchReasonText(item.matchReason) || "暂无摘要" }}</div>
                 </div>
-                <div style="text-align:right;color:#667085;font-weight:800;">{{ formatDateTime(item.publishedAt || view.lastSeenAt) }}</div>
+                <div style="text-align:right;color:#667085;font-weight:800;">{{ formatDateTimeUtil(item.publishedAt || view.lastSeenAt) }}</div>
               </article>
             </div>
           </section>
@@ -261,7 +220,7 @@
             <h2 class="card-title">时间线</h2>
             <div class="timeline">
               <div v-for="entry in timeline" :key="entry.time + entry.text" class="timeline-item">
-                <div class="timeline-time">{{ formatDateTime(entry.time) }}</div>
+                <div class="timeline-time">{{ formatDateTimeUtil(entry.time) }}</div>
                 <div class="timeline-type" :class="entry.tone">{{ entry.type }}</div>
                 <div>{{ entry.text }}</div>
                 <a class="timeline-link" :href="safeUrl(entry.url)" target="_blank" rel="noreferrer">↗</a>
@@ -270,8 +229,7 @@
           </section>
         </section>
       </template>
-    </main>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -280,6 +238,7 @@ import { RouterLink, useRoute, useRouter } from "vue-router";
 import type { ClusterAnalysis, HotClusterDetail, HotItemEvidence, SourceType } from "../shared/api/contracts";
 import { getErrorMessage } from "../shared/api/errors";
 import { fetchHotClusterDetail, fetchLatestHotClusterAnalysis, triggerHotClusterAnalysis } from "../shared/api/hotClusters";
+import { formatDateTime as formatDateTimeUtil, relativeTime as relativeTimeUtil } from "../shared/utils/datetime";
 import "../styles/hot-cluster-detail.css";
 
 type TabKey = "overview" | "score" | "evidence" | "timeline";
@@ -403,7 +362,7 @@ async function loadLatestAnalysis(clusterId: number): Promise<void> {
 async function runAnalysis(): Promise<void> {
   const clusterId = Number(route.params.clusterId);
   if (!Number.isFinite(clusterId) || clusterId <= 0) {
-    analysisError.value = "Missing valid cluster id.";
+    analysisError.value = "缺少有效的热点 ID。";
     return;
   }
   analysisTriggering.value = true;
@@ -446,7 +405,7 @@ function buildTags(item: HotClusterDetail | null): string[] {
 function buildReasons(item: HotClusterDetail): string[] {
   return [
     `这个事件当前聚合了 ${item.itemCount} 条证据，说明不是单点噪音。`,
-    `它最近一次更新发生在 ${relativeTime(item.lastSeenAt)}，仍然处在可追踪窗口。`,
+    `它最近一次更新发生在 ${relativeTimeUtil(item.lastSeenAt)}，仍然处在可追踪窗口。`,
     `详情页保留 raw evidence，便于后续回溯、重跑和评测。`
   ];
 }
@@ -454,18 +413,21 @@ function buildReasons(item: HotClusterDetail): string[] {
 function sourceTypeLabel(sourceType: SourceType): string {
   if (sourceType === "ARXIV") return "arXiv";
   if (sourceType === "GITHUB") return "GitHub";
+  if (sourceType === "HUGGING_FACE") return "Hugging Face";
   return "Hacker News";
 }
 
 function sourceClass(name: string): string {
   if (name === "arXiv") return "arxiv";
   if (name === "GitHub") return "github";
+  if (name === "Hugging Face") return "github";
   return "hn";
 }
 
 function sourceLetter(name: string): string {
   if (name === "arXiv") return "X";
   if (name === "GitHub") return "G";
+  if (name === "Hugging Face") return "H";
   return "Y";
 }
 
@@ -486,24 +448,6 @@ function hoursSince(value?: string): number {
   const timestamp = new Date(value).getTime();
   if (!Number.isFinite(timestamp)) return 24;
   return Math.max(0, (Date.now() - timestamp) / 3600000);
-}
-
-function relativeTime(value: string): string {
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "--";
-  const diffMinutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
-  if (diffMinutes < 1) return "刚刚";
-  if (diffMinutes < 60) return `${diffMinutes} 分钟前`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} 小时前`;
-  return `${Math.floor(diffHours / 24)} 天前`;
-}
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return "--";
-  const pad = (part: number) => String(part).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function safeUrl(value: string): string {
@@ -530,13 +474,3 @@ function fallbackTimeline() {
 }
 </script>
 
-<style scoped>
-.status-link-button {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
-}
-</style>

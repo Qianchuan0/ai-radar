@@ -798,7 +798,7 @@ components:
   schemas:
     SourceType:
       type: string
-      enum: [ARXIV, HACKER_NEWS, GITHUB]
+      enum: [ARXIV, HACKER_NEWS, GITHUB, HUGGING_FACE]
     AnalysisType:
       type: string
       enum: [CLUSTER_BRIEF]
