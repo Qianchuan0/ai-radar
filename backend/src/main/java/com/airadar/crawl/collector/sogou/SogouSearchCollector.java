@@ -5,7 +5,6 @@ import com.airadar.crawl.client.sogou.SogouSearchClient;
 import com.airadar.crawl.client.sogou.SogouSearchRequest;
 import com.airadar.crawl.collector.CollectedItem;
 import com.airadar.crawl.collector.CollectionBatch;
-import com.airadar.crawl.collector.CollectionError;
 import com.airadar.crawl.collector.SourceCollector;
 import com.airadar.source.entity.SourceConfigEntity;
 import com.airadar.source.model.SourceType;
