@@ -200,3 +200,25 @@
 - Phase 10 acceptance script
 - Phase 10 acceptance note
 - documentation sync: roadmap, decision log, ADR, project context, README
+
+## Phase 11A: Lightweight Scheduled Operations
+
+**Status:** In Progress
+
+### Goals
+
+- add the first lightweight scheduled operations loop without introducing heavy job infrastructure
+- reuse existing `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score` boundaries
+- keep alert delivery, scheduled reports, and scheduled evaluation out of scope for this step
+
+### Deliverables
+
+- Spring Scheduler based scheduled crawl runner gated by configuration
+- scheduled due-source selection based on `source_config.enabled`, `crawl_interval_minutes`, and recent `crawl_task` history
+- `SCHEDULED` crawl-task creation through the existing crawl execution path with bucketed idempotency keys
+- skip handling for in-flight sources and not-yet-due sources
+- crawl-task list API filters for `sourceId`, `triggerType`, and `status`
+- backend integration coverage for scheduled crawl triggering, skip paths, idempotency buckets, and task-list API visibility
+- Phase 11A acceptance script
+- Phase 11A acceptance note
+- documentation sync: roadmap, decision log, ADR, project context, OpenAPI

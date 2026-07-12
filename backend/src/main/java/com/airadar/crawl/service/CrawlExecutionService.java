@@ -8,6 +8,7 @@ import com.airadar.crawl.collector.CollectionError;
 import com.airadar.crawl.collector.CollectorRegistry;
 import com.airadar.crawl.entity.CrawlTaskEntity;
 import com.airadar.crawl.model.CrawlStage;
+import com.airadar.crawl.model.CrawlTriggerType;
 import com.airadar.crawl.service.CrawlTaskLifecycleService.TaskCreationResult;
 import com.airadar.crawl.vo.CrawlTaskVO;
 import com.airadar.item.service.ItemPipelineService;
@@ -46,12 +47,20 @@ public class CrawlExecutionService {
     }
 
     public CrawlTaskVO executeManual(long sourceId, String idempotencyKey) {
+        return execute(sourceId, idempotencyKey, CrawlTriggerType.MANUAL);
+    }
+
+    public CrawlTaskVO executeScheduled(long sourceId, String idempotencyKey) {
+        return execute(sourceId, idempotencyKey, CrawlTriggerType.SCHEDULED);
+    }
+
+    private CrawlTaskVO execute(long sourceId, String idempotencyKey, CrawlTriggerType triggerType) {
         SourceConfigEntity sourceConfig = sourceConfigService.findRequired(sourceId);
         if (!Boolean.TRUE.equals(sourceConfig.getEnabled())) {
             throw new BusinessException(ErrorCode.SOURCE_DISABLED);
         }
 
-        TaskCreationResult creation = taskLifecycleService.createOrGet(sourceId, idempotencyKey);
+        TaskCreationResult creation = taskLifecycleService.createOrGet(sourceId, idempotencyKey, triggerType);
         CrawlTaskEntity task = creation.task();
         if (!creation.created()) {
             return taskLifecycleService.get(task.getId());

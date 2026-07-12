@@ -30,6 +30,7 @@ The system does not stop at “crawl then summarize.” It keeps immutable raw s
 
 ```text
 multi-source collection
+-> optional scheduled crawl trigger based on source interval metadata
 -> raw data retention
 -> normalization
 -> deduplication and event clustering
@@ -124,6 +125,7 @@ Phase 9A fields:
 10. manual daily report generation and report history page
 11. manual evaluation loop with labeled datasets, rule-based case verifiers, persisted metrics, and error analysis
 12. real OpenAI structured analysis provider with provider-not-configured fallback and persisted failure codes
+13. lightweight scheduled crawl runner that reuses `crawl_interval_minutes` and the existing crawl-task pipeline
 
 ## Phase 1 Minimal Closed Loop
 
@@ -192,7 +194,7 @@ Stores the explainable score history for a cluster, including total score, compo
 
 ## What Is Intentionally Out of Scope Right Now
 
-- scheduled orchestration and heavy job infrastructure
+- heavy scheduled orchestration and external job infrastructure beyond the lightweight Spring Scheduler crawl loop
 - embedding or LLM clustering
 - external alert delivery channels, scheduler-driven matching, and scheduled report delivery
 - automated scheduling of evaluation runs and LLM-as-judge evaluation; the Phase 8 baseline is manual and rule-based only

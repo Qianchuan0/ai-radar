@@ -1,5 +1,6 @@
 package com.airadar.crawl.service;
 
+import com.airadar.common.api.PageResponse;
 import com.airadar.common.exception.BusinessException;
 import com.airadar.common.exception.ErrorCode;
 import com.airadar.crawl.entity.CrawlTaskEntity;
@@ -34,6 +35,10 @@ public class CrawlTaskLifecycleService {
     }
 
     public TaskCreationResult createOrGet(long sourceId, String idempotencyKey) {
+        return createOrGet(sourceId, idempotencyKey, CrawlTriggerType.MANUAL);
+    }
+
+    public TaskCreationResult createOrGet(long sourceId, String idempotencyKey, CrawlTriggerType triggerType) {
         CrawlTaskEntity existing = findByIdempotencyKey(sourceId, idempotencyKey);
         if (existing != null) {
             return new TaskCreationResult(existing, false);
@@ -42,7 +47,7 @@ public class CrawlTaskLifecycleService {
         Instant now = Instant.now();
         CrawlTaskEntity task = new CrawlTaskEntity();
         task.setSourceConfigId(sourceId);
-        task.setTriggerType(CrawlTriggerType.MANUAL);
+        task.setTriggerType(triggerType);
         task.setStatus(CrawlTaskStatus.PENDING);
         task.setIdempotencyKey(idempotencyKey);
         task.setRequestedAt(now);
@@ -135,6 +140,30 @@ public class CrawlTaskLifecycleService {
                         .orderByAsc(CrawlTaskErrorEntity::getOccurredAt)
         ).stream().map(this::toErrorVO).toList();
         return toVO(task, errors);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<CrawlTaskVO> list(
+            int page,
+            int size,
+            Long sourceId,
+            CrawlTriggerType triggerType,
+            CrawlTaskStatus status
+    ) {
+        LambdaQueryWrapper<CrawlTaskEntity> filter = new LambdaQueryWrapper<CrawlTaskEntity>()
+                .eq(sourceId != null, CrawlTaskEntity::getSourceConfigId, sourceId)
+                .eq(triggerType != null, CrawlTaskEntity::getTriggerType, triggerType)
+                .eq(status != null, CrawlTaskEntity::getStatus, status);
+        long total = crawlTaskMapper.selectCount(filter);
+        long offset = (long) (page - 1) * size;
+        List<CrawlTaskVO> items = crawlTaskMapper.selectList(filter
+                        .orderByDesc(CrawlTaskEntity::getRequestedAt)
+                        .orderByDesc(CrawlTaskEntity::getId)
+                        .last("LIMIT " + size + " OFFSET " + offset))
+                .stream()
+                .map(task -> toVO(task, List.of()))
+                .toList();
+        return PageResponse.of(items, page, size, total);
     }
 
     private CrawlTaskEntity findByIdempotencyKey(long sourceId, String idempotencyKey) {

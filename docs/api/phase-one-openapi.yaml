@@ -169,6 +169,51 @@ paths:
                 $ref: "#/components/schemas/CrawlTaskResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/crawl-tasks:
+    get:
+      tags: [Crawl Tasks]
+      summary: List crawl tasks
+      operationId: listCrawlTasks
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sourceId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: triggerType
+          in: query
+          schema:
+            $ref: "#/components/schemas/CrawlTriggerType"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/CrawlTaskStatus"
+      responses:
+        "200":
+          description: Crawl task page returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrawlTaskPageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
   /api/v1/hot-clusters:
     get:
       tags: [Hot Clusters]

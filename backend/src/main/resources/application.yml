@@ -51,6 +51,11 @@ ai-radar:
       connect-timeout: ${AI_RADAR_HN_CONNECT_TIMEOUT:3s}
       read-timeout: ${AI_RADAR_HN_READ_TIMEOUT:5s}
       max-attempts: ${AI_RADAR_HN_MAX_ATTEMPTS:2}
+  operations:
+    scheduled-crawl:
+      enabled: ${AI_RADAR_SCHEDULED_CRAWL_ENABLED:false}
+      fixed-delay: ${AI_RADAR_SCHEDULED_CRAWL_FIXED_DELAY:60s}
+      initial-delay: ${AI_RADAR_SCHEDULED_CRAWL_INITIAL_DELAY:30s}
 
 mybatis-plus:
   configuration:
