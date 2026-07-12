@@ -4,5 +4,6 @@ public enum SourceType {
     ARXIV,
     HACKER_NEWS,
     GITHUB,
-    HUGGING_FACE
+    HUGGING_FACE,
+    SOGOU_SEARCH
 }

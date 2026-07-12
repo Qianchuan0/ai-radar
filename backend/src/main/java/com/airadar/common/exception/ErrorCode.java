@@ -16,6 +16,7 @@ public enum ErrorCode {
     REPORT_NOT_FOUND("REPORT.NOT_FOUND", "Daily report not found.", HttpStatus.NOT_FOUND),
     CRAWL_TASK_NOT_FOUND("CRAWL.TASK_NOT_FOUND", "Crawl task not found.", HttpStatus.NOT_FOUND),
     CRAWL_UPSTREAM_ERROR("CRAWL.UPSTREAM_ERROR", "Upstream source request failed.", HttpStatus.BAD_GATEWAY),
+    CRAWL_PROVIDER_NOT_CONFIGURED("CRAWL.PROVIDER_NOT_CONFIGURED", "Crawl provider credentials are not configured.", HttpStatus.BAD_GATEWAY),
     HOT_CLUSTER_NOT_FOUND("CLUSTER.NOT_FOUND", "Hot cluster not found.", HttpStatus.NOT_FOUND),
     CLUSTER_ANALYSIS_NOT_FOUND("ANALYSIS.NOT_FOUND", "Cluster analysis not found.", HttpStatus.NOT_FOUND),
     ANALYSIS_PROVIDER_NOT_CONFIGURED("ANALYSIS.PROVIDER_NOT_CONFIGURED", "Analysis provider is not configured.", HttpStatus.CONFLICT),
