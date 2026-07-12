@@ -134,11 +134,12 @@
               <div v-if="analysisLoading" class="analysis-state">正在加载最新的结构化分析。</div>
               <div v-else-if="analysisError" class="analysis-state analysis-error">{{ analysisError }}</div>
               <div v-else-if="analysis?.status === 'FAILED'" class="analysis-state analysis-error">
-                {{ analysis.failureMessage || "结构化分析失败。" }}
+                {{ analysisFailureText }}
               </div>
               <div v-else-if="analysis?.result" class="analysis-body">
                 <div class="analysis-meta">
                   <span class="pill">置信度 {{ analysis.result.confidence }}</span>
+                  <span class="analysis-subtle">{{ analysisProviderLabel }}</span>
                   <span class="analysis-subtle">{{ formatDateTimeUtil(analysis.createdAt) }}</span>
                 </div>
                 <h3 class="analysis-headline">{{ analysis.result.headline }}</h3>
@@ -291,6 +292,29 @@ const view = computed(() => {
 const sourceStatus = computed(() => {
   const names = new Set((detail.value?.items ?? []).map((item) => sourceTypeLabel(item.sourceType)));
   return Array.from(names.size ? names : new Set(["Hacker News"])).map((name) => ({ name }));
+});
+
+const analysisProviderLabel = computed(() => {
+  const provider = analysis.value?.modelProvider;
+  const modelName = analysis.value?.modelName;
+  if (!provider && !modelName) return "";
+  if (!provider) return modelName;
+  if (!modelName) return provider;
+  return `${provider} · ${modelName}`;
+});
+
+const analysisFailureText = computed(() => {
+  const code = analysis.value?.failureCode;
+  if (code === "ANALYSIS_PROVIDER_NOT_CONFIGURED") {
+    return "分析服务尚未配置。请由管理员设置 AI_RADAR_OPENAI_API_KEY 后重试。";
+  }
+  if (code === "ANALYSIS_TIMEOUT") {
+    return "调用上游模型超时，请稍后重试。";
+  }
+  if (code === "ANALYSIS_UPSTREAM_ERROR" || code === "ANALYSIS_RESPONSE_PARSE_FAILED" || code === "ANALYSIS_SCHEMA_INVALID") {
+    return "上游模型调用失败，已记录失败原因，请稍后重试。";
+  }
+  return analysis.value?.failureMessage || "结构化分析失败。";
 });
 
 const scoreBreakdown = computed(() => {

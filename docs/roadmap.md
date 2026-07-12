@@ -176,3 +176,27 @@
 - raw-item to hot-score integration coverage for the fourth source
 - source connector implementation template and documentation updates
 - Phase 9A acceptance script and acceptance note
+
+## Phase 10: Real LLM Structured Analysis Provider
+
+**Status:** Completed
+
+### Goals
+
+- replace the Phase 5 fake structured analysis with a real, replayable OpenAI provider
+- keep the existing `cluster_analysis` persistence, API surface, and frontend card unchanged
+- preserve application startup when the API key is missing and record a stable failure code instead
+
+### Deliverables
+
+- `openai-java` SDK dependency and `ai-radar.analysis.openai` configuration
+- `OpenAiStructuredAnalysisClient` using the Chat Completions API with `response_format=json_object` and an in-prompt schema description
+- prompt factory, response mapper, and structured output schema derived from the existing VO
+- provider selector backed by `@ConditionalOnProperty`, with `openai` as the default
+- expanded `ErrorCode` set covering provider-not-configured, upstream, timeout, schema, and parse failures
+- `AnalysisProviderException` propagation into persisted `cluster_analysis.failureCode`
+- backend unit, mock-client, and integration tests without real OpenAI calls
+- optional live verification script gated on `OPENAI_API_KEY`
+- Phase 10 acceptance script
+- Phase 10 acceptance note
+- documentation sync: roadmap, decision log, ADR, project context, README

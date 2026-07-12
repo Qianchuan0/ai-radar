@@ -36,7 +36,7 @@ multi-source collection
 -> explainable scoring
 -> hot-cluster APIs
 -> frontend list/detail pages
--> structured analysis
+-> structured analysis (real OpenAI provider with Structured Outputs, fake fallback retained)
 -> subscription matching and alert review
 -> daily report generation
 -> manual evaluation of labeled cases against persisted data
@@ -123,6 +123,7 @@ Phase 9A fields:
 9. manual subscription matching and alert review page
 10. manual daily report generation and report history page
 11. manual evaluation loop with labeled datasets, rule-based case verifiers, persisted metrics, and error analysis
+12. real OpenAI structured analysis provider with provider-not-configured fallback and persisted failure codes
 
 ## Phase 1 Minimal Closed Loop
 

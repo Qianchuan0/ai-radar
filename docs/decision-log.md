@@ -24,16 +24,16 @@ This file captures short accepted decisions. Larger decisions with context, opti
 18. The first fourth-source expansion after Phase 8 is Hugging Face Models, while Hugging Face datasets and Spaces stay out of scope for Phase 9A.
 19. The frontend uses a unified `AppLayout` shell component for sidebar/topbar/breadcrumb, with menu items and breadcrumbs derived from route `meta`. UI language is unified to Chinese with ant-design-vue `zh_CN` locale configured via `a-config-provider`. The independent layouts and English copy previously implemented per page (Phase 6/7/8) are consolidated into this shell, and `shared/utils/datetime.ts` provides unified Chinese time formatting.
 20. Phase 9A closes with Hugging Face Models integrated into the existing manual crawl-to-cluster path, frontend-compatible source labels, and a dedicated acceptance script plus source connector checklist for future source additions.
+21. Phase 10 replaces the Phase 5 fake structured analysis provider with a real OpenAI-compatible provider built on the official `openai-java` SDK and the Chat Completions API. Chat Completions is preferred over the Responses API because it is the lowest-common-denominator OpenAI-compatible surface and is also supported by gateways such as DeepSeek. The wire-level schema mode is `response_format=json_object` rather than the stricter `json_schema`, because the latter is not implemented by every compatible gateway; the JSON shape is described in the system prompt and enforced by `OpenAiAnalysisResponseMapper`. The application must still start when the API key is missing; in that case `/analysis-runs` returns `FAILED` with `ANALYSIS_PROVIDER_NOT_CONFIGURED` persisted in `cluster_analysis`.
 
 ## Pending Decisions
 
 1. When to introduce `pgvector` or other embedding-based retrieval.
 2. Whether future scheduling needs exceed Spring Scheduler.
-3. Which real LLM provider or framework should replace the Phase 5 fake model client.
-4. When global frontend state is large enough to justify Pinia.
-5. When aggregate analytics APIs justify charts or dashboards.
-6. Which delivery channel should be introduced first after the manual Phase 6 alert baseline.
-7. When daily report generation should move from manual runs to scheduled delivery.
+3. When global frontend state is large enough to justify Pinia.
+4. When aggregate analytics APIs justify charts or dashboards.
+5. Which delivery channel should be introduced first after the manual Phase 6 alert baseline.
+6. When daily report generation should move from manual runs to scheduled delivery.
 
 ## ADR Index
 
@@ -42,3 +42,4 @@ This file captures short accepted decisions. Larger decisions with context, opti
 - [ADR-003: Start with a Rule-Based Clustering Baseline](adr/ADR-003-rule-based-clustering-baseline.md)
 - [ADR-004: Start with Explainable Rule-Based Hot Scoring](adr/ADR-004-rule-based-hot-scoring-baseline.md)
 - [ADR-005: Use Vue 3 for the Frontend MVP](adr/ADR-005-frontend-mvp-stack.md)
+- [ADR-006: Use OpenAI Chat Completions API with Official openai-java SDK for Real Structured Analysis](adr/ADR-006-real-llm-provider.md)

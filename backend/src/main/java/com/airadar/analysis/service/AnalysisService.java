@@ -1,5 +1,6 @@
 package com.airadar.analysis.service;
 
+import com.airadar.analysis.client.AnalysisProviderException;
 import com.airadar.analysis.client.ClusterEvidencePack;
 import com.airadar.analysis.client.StructuredAnalysisModelClient;
 import com.airadar.analysis.entity.ClusterAnalysisEntity;
@@ -85,10 +86,19 @@ public class AnalysisService {
             entity.setUpdatedAt(finishedAt);
             clusterAnalysisMapper.updateById(entity);
             return toVO(entity);
+        } catch (AnalysisProviderException ex) {
+            Instant finishedAt = Instant.now();
+            entity.setStatus(AnalysisRunStatus.FAILED);
+            entity.setFailureCode(ex.errorCode().name());
+            entity.setFailureMessage(truncateFailureMessage(ex.getMessage()));
+            entity.setFinishedAt(finishedAt);
+            entity.setUpdatedAt(finishedAt);
+            clusterAnalysisMapper.updateById(entity);
+            return toVO(entity);
         } catch (RuntimeException ex) {
             Instant finishedAt = Instant.now();
             entity.setStatus(AnalysisRunStatus.FAILED);
-            entity.setFailureCode("ANALYSIS_GENERATION_FAILED");
+            entity.setFailureCode(ErrorCode.ANALYSIS_GENERATION_FAILED.name());
             entity.setFailureMessage(truncateFailureMessage(ex.getMessage()));
             entity.setFinishedAt(finishedAt);
             entity.setUpdatedAt(finishedAt);

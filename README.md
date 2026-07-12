@@ -19,7 +19,7 @@ AI information is fragmented across research feeds, developer communities, and o
 
 - Start from `arXiv`, `Hacker News`, `GitHub`, and `Hugging Face Models`.
 - Prove the closed loop from source configuration to event-level hot-cluster display.
-- Current verified path: `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score -> cluster_analysis -> subscription_rule -> alert_record -> daily_report -> evaluation_run -> APIs -> frontend list/detail/alerts/reports/evaluation`.
+- Current verified path: `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score -> cluster_analysis (real OpenAI provider or fake fallback) -> subscription_rule -> alert_record -> daily_report -> evaluation_run -> APIs -> frontend list/detail/alerts/reports/evaluation`.
 - Current verified source expansion: `Hacker News + arXiv + GitHub + Hugging Face Models`, with `HUGGING_FACE` covered through client parsing, raw retention, normalization, clustering, scoring, and frontend-compatible source filtering.
 
 ## Core Concepts
@@ -39,4 +39,6 @@ AI information is fragmented across research feeds, developer communities, and o
 
 ## Current Status
 
-**Phase 1 completed / Phase 2 completed / Phase 3 completed / Phase 4 completed / Phase 5 completed / Phase 6 completed / Phase 7 completed / Phase 8 completed / Phase 9A completed**
+**Phase 1 completed / Phase 2 completed / Phase 3 completed / Phase 4 completed / Phase 5 completed / Phase 6 completed / Phase 7 completed / Phase 8 completed / Phase 9A completed / Phase 10 completed**
+
+Phase 10 replaces the Phase 5 fake structured analysis with a real OpenAI-compatible provider backed by the official `openai-java` SDK and the Chat Completions API. Chat Completions is chosen over the Responses API so the same code path works against both OpenAI itself and OpenAI-compatible gateways (e.g. DeepSeek). The wire schema mode is `response_format=json_object` plus an in-prompt schema description, because the stricter `json_schema` mode is not implemented by every compatible gateway. The application starts even when the API key is missing; in that case analysis runs are persisted with `ANALYSIS_PROVIDER_NOT_CONFIGURED` until `AI_RADAR_OPENAI_API_KEY` is provided. Default tests stay offline, `.\scripts\accept-phase-10.ps1` is the repeatable acceptance path, and an optional `scripts/live-verify-openai.ps1` path verified the real provider end-to-end against DeepSeek on 2026-07-12.

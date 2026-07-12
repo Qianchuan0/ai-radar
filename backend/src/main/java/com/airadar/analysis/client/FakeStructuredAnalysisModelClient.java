@@ -2,6 +2,7 @@ package com.airadar.analysis.client;
 
 import com.airadar.analysis.vo.AnalysisEvidenceRefVO;
 import com.airadar.analysis.vo.StructuredAnalysisResultVO;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@ConditionalOnProperty(prefix = "ai-radar.analysis", name = "provider", havingValue = "fake")
 public class FakeStructuredAnalysisModelClient implements StructuredAnalysisModelClient {
 
     @Override

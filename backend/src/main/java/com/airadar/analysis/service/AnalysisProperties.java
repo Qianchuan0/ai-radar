@@ -5,8 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ai-radar.analysis")
 public class AnalysisProperties {
 
-    private String provider = "fake";
-    private String modelName = "fake-cluster-brief-v1";
+    private String provider = "openai";
+    private String modelName = "gpt-4.1-mini";
     private String schemaVersion = "cluster-brief.v1";
     private String promptVersion = "cluster-brief.prompt.v1";
 

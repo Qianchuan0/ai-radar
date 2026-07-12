@@ -17,10 +17,16 @@ spring:
 
 ai-radar:
   analysis:
-    provider: ${AI_RADAR_ANALYSIS_PROVIDER:fake}
-    model-name: ${AI_RADAR_ANALYSIS_MODEL_NAME:fake-cluster-brief-v1}
+    provider: ${AI_RADAR_ANALYSIS_PROVIDER:openai}
+    model-name: ${AI_RADAR_ANALYSIS_MODEL_NAME:gpt-4.1-mini}
     schema-version: ${AI_RADAR_ANALYSIS_SCHEMA_VERSION:cluster-brief.v1}
     prompt-version: ${AI_RADAR_ANALYSIS_PROMPT_VERSION:cluster-brief.prompt.v1}
+    openai:
+      base-url: ${AI_RADAR_OPENAI_BASE_URL:https://api.openai.com/v1}
+      api-key: ${AI_RADAR_OPENAI_API_KEY:}
+      connect-timeout: ${AI_RADAR_OPENAI_CONNECT_TIMEOUT:5s}
+      read-timeout: ${AI_RADAR_OPENAI_READ_TIMEOUT:30s}
+      max-attempts: ${AI_RADAR_OPENAI_MAX_ATTEMPTS:2}
   collector:
     arxiv:
       base-url: ${AI_RADAR_ARXIV_BASE_URL:https://export.arxiv.org/api}
