@@ -24,9 +24,6 @@ import java.util.List;
 @Component
 public class SogouSearchCollector implements SourceCollector {
 
-    private static final int DEFAULT_CNT = 10;
-    private static final int DEFAULT_MODE = 0;
-
     private final SogouSearchClient sogouSearchClient;
     private final ObjectMapper objectMapper;
 
@@ -44,8 +41,8 @@ public class SogouSearchCollector implements SourceCollector {
     public CollectionBatch collect(SourceConfigEntity sourceConfig) {
         JsonNode config = sourceConfig.getConfigPayload();
         String query = config.path("query").asText("").trim();
-        int cnt = config.path("cnt").asInt(DEFAULT_CNT);
-        int mode = config.path("mode").asInt(DEFAULT_MODE);
+        Integer cnt = config.hasNonNull("cnt") ? config.path("cnt").asInt() : null;
+        Integer mode = config.hasNonNull("mode") ? config.path("mode").asInt() : null;
         String site = config.path("site").asText("");
         String freshness = config.path("freshness").asText("");
 

@@ -106,6 +106,48 @@ class SogouSearchClientTest {
     }
 
     @Test
+    void shouldOmitOptionalParametersWhenUnset() throws IOException {
+        AtomicReference<String> requestBody = new AtomicReference<>();
+        server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/", exchange -> {
+            requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            writeJson(exchange, 200, """
+                    {"Response":{"Query":"test","Pages":[],"Version":"lite","RequestId":"r"}}
+                    """);
+        });
+        server.start();
+
+        SogouSearchClient client = createClient();
+
+        List<FetchedSogouSearchResult> results = client.search(new SogouSearchRequest(
+                "test", null, null, "", "", null, null
+        ));
+
+        assertThat(results).isEmpty();
+        assertThat(requestBody.get()).contains("\"Query\":\"test\"");
+        assertThat(requestBody.get()).doesNotContain("\"Cnt\"");
+        assertThat(requestBody.get()).doesNotContain("\"Mode\"");
+    }
+
+    @Test
+    void shouldThrowOnTencentCloudResponseError() throws IOException {
+        server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/", exchange -> writeJson(exchange, 200, """
+                {"Response":{"Error":{"Code":"InvalidParameter","Message":"illegal Mode"},"RequestId":"r"}}
+                """));
+        server.start();
+
+        SogouSearchClient client = createClient();
+
+        assertThatThrownBy(() -> client.search(new SogouSearchRequest(
+                "test", 10, 0, "", "", null, null
+        )))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("InvalidParameter")
+                .hasMessageContaining("illegal Mode");
+    }
+
+    @Test
     void shouldThrowOnUpstreamError() throws IOException {
         server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext("/", exchange -> writeJson(exchange, 500, """

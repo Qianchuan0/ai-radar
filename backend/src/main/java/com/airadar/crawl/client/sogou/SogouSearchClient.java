@@ -72,8 +72,12 @@ public class SogouSearchClient {
     private String buildPayload(SogouSearchRequest request) {
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("Query", request.query());
-        payload.put("Cnt", request.cnt());
-        payload.put("Mode", request.mode());
+        if (request.cnt() != null) {
+            payload.put("Cnt", request.cnt());
+        }
+        if (request.mode() != null) {
+            payload.put("Mode", request.mode());
+        }
         if (request.site() != null && !request.site().isBlank()) {
             payload.put("Site", request.site());
         }
@@ -140,6 +144,17 @@ public class SogouSearchClient {
         try {
             JsonNode root = objectMapper.readTree(responseBody);
             JsonNode response = root.path("Response");
+            JsonNode error = response.path("Error");
+            if (!error.isMissingNode() && !error.isNull()) {
+                String code = nullableText(error, "Code");
+                String message = nullableText(error, "Message");
+                throw new BusinessException(
+                        ErrorCode.CRAWL_UPSTREAM_ERROR,
+                        message == null || message.isBlank()
+                                ? "Sogou Search returned upstream error: " + code
+                                : "Sogou Search returned upstream error: " + code + " - " + message
+                );
+            }
             JsonNode pages = response.path("Pages");
             if (!pages.isArray()) {
                 return List.of();

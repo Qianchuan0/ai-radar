@@ -15,11 +15,12 @@
 - Application starts without `AI_RADAR_SOGOU_SEARCH_SECRET_ID` / `AI_RADAR_SOGOU_SEARCH_SECRET_KEY`
 - `TencentCloudV3Signer` produces valid TC3-HMAC-SHA256 signatures
 - `CRAWL_PROVIDER_NOT_CONFIGURED` error code covers missing credentials
+- Optional Tencent Cloud request parameters such as `Cnt` and `Mode` are omitted unless configured, and `Response.Error` payloads fail the crawl explicitly
 
 ## Test Coverage
 
 - `TencentCloudV3SignerTest`: signature structure, determinism, payload sensitivity, credential scope
-- `SogouSearchClientTest`: signed POST, Pages parsing, empty response, upstream error, missing fields
+- `SogouSearchClientTest`: signed POST, Pages parsing, empty response, upstream error, Tencent Cloud `Response.Error`, optional parameter omission, missing fields
 - `SogouSearchRawDataFlowIntegrationTest`: full `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score` flow
 - Frontend: `parseSourceType` includes `SOGOU_SEARCH`, production build passes
 
