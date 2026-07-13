@@ -29,6 +29,9 @@
                 <option value="GITHUB">GitHub</option>
                 <option value="HUGGING_FACE">Hugging Face</option>
                 <option value="SOGOU_SEARCH">搜狗搜索</option>
+                <option value="WEIBO_HOT_SEARCH">微博热搜</option>
+                <option value="HACKER_NEWS_SEARCH">Hacker News Search</option>
+                <option value="TWITTER">Twitter</option>
               </select>
             </div>
           </label>
@@ -256,7 +259,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
-import type { HotClusterSummary } from "../shared/api/contracts";
+import type { HotClusterSummary, SourceType } from "../shared/api/contracts";
 import { getErrorMessage } from "../shared/api/errors";
 import { fetchHotClusters } from "../shared/api/hotClusters";
 import { buildHotClusterQuery, parseHotClusterFilters, resetHotClusterFilters, toHotClusterListQuery } from "../shared/utils/query";
@@ -346,11 +349,14 @@ function primarySourceName(item: HotClusterSummary): string {
   return sourceTypeLabel(item.sourceTypes[0] ?? "HACKER_NEWS");
 }
 
-function sourceTypeLabel(sourceType: "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE" | "SOGOU_SEARCH"): string {
+function sourceTypeLabel(sourceType: SourceType): string {
   if (sourceType === "ARXIV") return "arXiv";
   if (sourceType === "GITHUB") return "GitHub";
   if (sourceType === "HUGGING_FACE") return "Hugging Face";
   if (sourceType === "SOGOU_SEARCH") return "搜狗搜索";
+  if (sourceType === "WEIBO_HOT_SEARCH") return "微博热搜";
+  if (sourceType === "HACKER_NEWS_SEARCH") return "Hacker News Search";
+  if (sourceType === "TWITTER") return "Twitter";
   return "Hacker News";
 }
 

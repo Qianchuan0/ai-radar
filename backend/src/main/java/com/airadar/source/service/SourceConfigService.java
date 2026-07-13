@@ -114,6 +114,9 @@ public class SourceConfigService {
             case GITHUB -> validateGitHubConfig(config);
             case HUGGING_FACE -> validateHuggingFaceConfig(config);
             case SOGOU_SEARCH -> validateSogouSearchConfig(config);
+            case WEIBO_HOT_SEARCH -> validateWeiboHotSearchConfig(config);
+            case HACKER_NEWS_SEARCH -> validateHackerNewsSearchConfig(config);
+            case TWITTER -> validateTwitterConfig(config);
         }
     }
 
@@ -270,5 +273,102 @@ public class SourceConfigService {
                     "Sogou Search freshness must match pattern d[N], m[N], y[N] (e.g. d1, d7, m3, y2) or be empty."
             );
         }
+    }
+
+    private void validateWeiboHotSearchConfig(JsonNode config) {
+        String query = config.path("query").asText("").trim();
+        if (query.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Weibo Hot Search query must not be blank."
+            );
+        }
+        // includeTopWhenNoMatch is optional, defaults to false
+        config.path("includeTopWhenNoMatch").asBoolean(false);
+    }
+
+    private void validateHackerNewsSearchConfig(JsonNode config) {
+        String query = config.path("query").asText("").trim();
+        if (query.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Hacker News Search query must not be blank."
+            );
+        }
+        int limit = config.path("limit").asInt(20);
+        if (limit < 1 || limit > 100) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Hacker News Search limit must be between 1 and 100."
+            );
+        }
+        int freshnessHours = config.path("freshnessHours").asInt(24);
+        if (freshnessHours < 1 || freshnessHours > 720) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Hacker News Search freshnessHours must be between 1 and 720."
+            );
+        }
+    }
+
+    private void validateTwitterConfig(JsonNode config) {
+        String query = config.path("query").asText("").trim();
+        if (query.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Twitter query must not be blank."
+            );
+        }
+        int limit = config.path("limit").asInt(20);
+        if (limit < 1 || limit > 100) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Twitter limit must be between 1 and 100."
+            );
+        }
+        int topDays = config.path("topDays").asInt(7);
+        if (topDays < 1 || topDays > 30) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Twitter topDays must be between 1 and 30."
+            );
+        }
+        int latestDays = config.path("latestDays").asInt(3);
+        if (latestDays < 1 || latestDays > 30) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Twitter latestDays must be between 1 and 30."
+            );
+        }
+        int minLikes = config.path("minLikes").asInt(10);
+        if (minLikes < 0) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Twitter minLikes must be non-negative."
+            );
+        }
+        int minRetweets = config.path("minRetweets").asInt(5);
+        if (minRetweets < 0) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Twitter minRetweets must be non-negative."
+            );
+        }
+        int minViews = config.path("minViews").asInt(500);
+        if (minViews < 0) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Twitter minViews must be non-negative."
+            );
+        }
+        int minFollowers = config.path("minFollowers").asInt(100);
+        if (minFollowers < 0) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Twitter minFollowers must be non-negative."
+            );
+        }
+        // onlyOriginalTweets is optional, defaults to true
+        config.path("onlyOriginalTweets").asBoolean(true);
     }
 }

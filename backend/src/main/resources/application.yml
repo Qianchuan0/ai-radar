@@ -51,6 +51,11 @@ ai-radar:
       connect-timeout: ${AI_RADAR_HN_CONNECT_TIMEOUT:3s}
       read-timeout: ${AI_RADAR_HN_READ_TIMEOUT:5s}
       max-attempts: ${AI_RADAR_HN_MAX_ATTEMPTS:2}
+    hacker-news-search:
+      base-url: ${AI_RADAR_HN_SEARCH_BASE_URL:https://hn.algolia.com}
+      connect-timeout: ${AI_RADAR_HN_SEARCH_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_HN_SEARCH_READ_TIMEOUT:8s}
+      max-attempts: ${AI_RADAR_HN_SEARCH_MAX_ATTEMPTS:2}
     sogou-search:
       base-url: ${AI_RADAR_SOGOU_SEARCH_BASE_URL:https://wsa.tencentcloudapi.com}
       connect-timeout: ${AI_RADAR_SOGOU_SEARCH_CONNECT_TIMEOUT:3s}
@@ -58,6 +63,17 @@ ai-radar:
       max-attempts: ${AI_RADAR_SOGOU_SEARCH_MAX_ATTEMPTS:2}
       secret-id: ${AI_RADAR_SOGOU_SEARCH_SECRET_ID:}
       secret-key: ${AI_RADAR_SOGOU_SEARCH_SECRET_KEY:}
+    weibo-hot-search:
+      base-url: ${AI_RADAR_WEIBO_HOT_SEARCH_BASE_URL:https://weibo.com}
+      connect-timeout: ${AI_RADAR_WEIBO_HOT_SEARCH_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_WEIBO_HOT_SEARCH_READ_TIMEOUT:8s}
+      max-attempts: ${AI_RADAR_WEIBO_HOT_SEARCH_MAX_ATTEMPTS:2}
+    twitter:
+      base-url: ${AI_RADAR_TWITTER_BASE_URL:https://api.twitterapi.io}
+      api-key: ${AI_RADAR_TWITTER_API_KEY:}
+      connect-timeout: ${AI_RADAR_TWITTER_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_TWITTER_READ_TIMEOUT:8s}
+      max-attempts: ${AI_RADAR_TWITTER_MAX_ATTEMPTS:2}
   operations:
     scheduled-crawl:
       enabled: ${AI_RADAR_SCHEDULED_CRAWL_ENABLED:false}

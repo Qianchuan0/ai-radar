@@ -5,5 +5,8 @@ public enum SourceType {
     HACKER_NEWS,
     GITHUB,
     HUGGING_FACE,
-    SOGOU_SEARCH
+    SOGOU_SEARCH,
+    WEIBO_HOT_SEARCH,
+    HACKER_NEWS_SEARCH,
+    TWITTER
 }

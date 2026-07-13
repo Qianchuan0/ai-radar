@@ -57,6 +57,21 @@ describe("hot cluster query helpers", () => {
         expect(filters.sourceType).toBe("SOGOU_SEARCH");
     });
 
+    it("parses WEIBO_HOT_SEARCH sourceType from query", () => {
+        const filters = parseHotClusterFilters({ sourceType: "WEIBO_HOT_SEARCH" });
+        expect(filters.sourceType).toBe("WEIBO_HOT_SEARCH");
+    });
+
+    it("parses HACKER_NEWS_SEARCH sourceType from query", () => {
+        const filters = parseHotClusterFilters({ sourceType: "HACKER_NEWS_SEARCH" });
+        expect(filters.sourceType).toBe("HACKER_NEWS_SEARCH");
+    });
+
+    it("parses TWITTER sourceType from query", () => {
+        const filters = parseHotClusterFilters({ sourceType: "TWITTER" });
+        expect(filters.sourceType).toBe("TWITTER");
+    });
+
     it("creates an isolated reset payload", () => {
         const first = resetHotClusterFilters();
         const second = resetHotClusterFilters();

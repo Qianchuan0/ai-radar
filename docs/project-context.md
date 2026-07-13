@@ -127,6 +127,55 @@ Phase 12A fields:
 - `rank`
 - `query`
 
+### Weibo Hot Search
+
+Purpose: monitor current Chinese-language platform hot topics that match configured AI keywords.
+
+Phase 12B-1 fields:
+
+- `word`
+- `note`
+- `num`
+- `category`
+- `mid`
+- `raw_hot`
+- `rank`
+- `query`
+
+### Hacker News Search
+
+Purpose: monitor Hacker News keyword search results through Algolia, separate from the existing Firebase top-stories source.
+
+Phase 12B-1 fields:
+
+- `object_id`
+- `title`
+- `url`
+- `story_text`
+- `author`
+- `points`
+- `num_comments`
+- `created_at_i`
+
+### Twitter/X
+
+Purpose: monitor AI-related social discussion through a compatible Twitter API provider.
+
+Phase 12B-1 fields:
+
+- `tweet_id`
+- `text`
+- `author_name`
+- `author_username`
+- `author_followers`
+- `author_verified`
+- `like_count`
+- `retweet_count`
+- `reply_count`
+- `quote_count`
+- `view_count`
+- `created_at`
+
 ## MVP Functional Modules
 
 1. source configuration, enable/disable controls, and frontend source management page
@@ -144,6 +193,7 @@ Phase 12A fields:
 13. lightweight scheduled crawl runner that reuses `crawl_interval_minutes` and the existing crawl-task pipeline
 14. lightweight scheduled daily report runner that reuses the existing report generation service
 15. Sogou Search as the first Chinese platform source via Tencent Cloud Web Search API, with manual TC3-HMAC-SHA256 signature
+16. Phase 12B-1 structured JSON/API sources: Weibo Hot Search, Hacker News Algolia Search, and Twitter/X via `twitterapi.io`
 
 ## Phase 1 Minimal Closed Loop
 

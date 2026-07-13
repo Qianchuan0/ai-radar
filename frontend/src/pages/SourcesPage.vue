@@ -144,6 +144,9 @@ function sourceLabel(sourceType: SourceType): string {
   if (sourceType === "GITHUB") return "GitHub";
   if (sourceType === "HUGGING_FACE") return "Hugging Face";
   if (sourceType === "SOGOU_SEARCH") return "搜狗搜索";
+  if (sourceType === "WEIBO_HOT_SEARCH") return "微博热搜";
+  if (sourceType === "HACKER_NEWS_SEARCH") return "Hacker News Search";
+  if (sourceType === "TWITTER") return "Twitter";
   return "Hacker News";
 }
 </script>

@@ -267,3 +267,25 @@
 - frontend source label "搜狗搜索" and filter option
 - Phase 12A acceptance script and acceptance note
 - documentation sync: roadmap, decision log, project context, README
+
+## Phase 12B-1: Low-Risk JSON/API Sources (Weibo, HN Search, Twitter)
+
+**Status:** Completed
+
+### Goals
+
+- integrate three low-risk, structured JSON/API sources without introducing heavy infrastructure
+- validate that the existing crawl-to-cluster closed loop supports heterogeneous API sources with different request/response patterns
+- keep application startup stable even when optional API keys are missing
+
+### Deliverables
+
+- `WEIBO_HOT_SEARCH` source type with Weibo hot list API integration
+- `HACKER_NEWS_SEARCH` source type with Hacker News Algolia Search API integration
+- `TWITTER` source type with `twitterapi.io` API integration
+- `CRAWL_PROVIDER_NOT_CONFIGURED` error code for missing Twitter API key
+- source-specific config validation, retry logic, and quality filtering
+- frontend source labels "微博热搜", "Hacker News 搜索", "Twitter/X"
+- raw-to-hot integration tests for all three sources
+- Phase 12B-1 acceptance script
+- documentation sync: roadmap, decision log, project context, README
