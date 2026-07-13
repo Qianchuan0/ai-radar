@@ -19,7 +19,7 @@ AI information is fragmented across research feeds, developer communities, and o
 
 - Start from `arXiv`, `Hacker News`, `GitHub`, and `Hugging Face Models`.
 - Prove the closed loop from source configuration to event-level hot-cluster display.
-- Current verified path: `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score -> cluster_analysis (real OpenAI provider or fake fallback) -> subscription_rule -> alert_record -> daily_report -> evaluation_run -> APIs -> frontend list/detail/alerts/reports/evaluation`.
+- Current verified path: `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score -> cluster_analysis (real OpenAI provider or fake fallback) -> subscription_rule -> alert_record -> daily_report -> evaluation_run -> APIs -> frontend list/detail/alerts/reports/evaluation/sources`.
 - Current verified source expansion: `Hacker News + arXiv + GitHub + Hugging Face Models`, with `HUGGING_FACE` covered through client parsing, raw retention, normalization, clustering, scoring, and frontend-compatible source filtering.
 
 ## Core Concepts

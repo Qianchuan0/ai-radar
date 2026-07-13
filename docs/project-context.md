@@ -129,14 +129,14 @@ Phase 12A fields:
 
 ## MVP Functional Modules
 
-1. source configuration and enable/disable controls
+1. source configuration, enable/disable controls, and frontend source management page
 2. manual crawl execution and crawl-task tracking
 3. immutable raw-item retention
 4. hot-item normalization
 5. rule-based clustering
 6. explainable hot scoring
 7. hot-cluster list/detail APIs
-8. frontend ranking page, detail page, and page states
+8. frontend ranking page, detail page, source management page, and page states
 9. manual subscription matching and alert review page
 10. manual daily report generation, optional scheduled report generation, and report history page
 11. manual evaluation loop with labeled datasets, rule-based case verifiers, persisted metrics, and error analysis

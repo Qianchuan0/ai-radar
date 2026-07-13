@@ -41,6 +41,12 @@ export const routes: RouteRecordRaw[] = [
         name: "evaluation",
         component: () => import("../pages/EvaluationPage.vue"),
         meta: { menuText: "评测", breadcrumb: ["热点榜单", "评测"], inMenu: true }
+    },
+    {
+        path: "/sources",
+        name: "sources",
+        component: () => import("../pages/SourcesPage.vue"),
+        meta: { menuText: "来源管理", breadcrumb: ["热点榜单", "来源管理"], inMenu: true }
     }
 ];
 

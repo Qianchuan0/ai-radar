@@ -188,6 +188,23 @@ export interface DailyReportGeneration {
     generatedAt: string;
 }
 
+export interface SourceConfig {
+    id: number;
+    sourceCode: string;
+    sourceType: SourceType;
+    displayName: string;
+    enabled: boolean;
+    crawlIntervalMinutes: number | null;
+    config: Record<string, unknown>;
+    version: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface SourceStatusUpdate {
+    enabled: boolean;
+}
+
 export type EvaluationCaseType =
     | "CRAWL_ITEM_PRESENT"
     | "CLUSTER_MEMBERSHIP"

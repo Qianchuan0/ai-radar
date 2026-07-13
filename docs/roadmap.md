@@ -218,7 +218,8 @@
 - `SCHEDULED` crawl-task creation through the existing crawl execution path with bucketed idempotency keys
 - skip handling for in-flight sources and not-yet-due sources
 - crawl-task list API filters for `sourceId`, `triggerType`, and `status`
-- backend integration coverage for scheduled crawl triggering, skip paths, idempotency buckets, and task-list API visibility
+- frontend source management page at `/sources` for viewing source configs and toggling enable/disable status
+- backend integration coverage for scheduled crawl triggering, skip paths, idempotency buckets, task-list API visibility, and disable-via-status exclusion
 - Phase 11A acceptance script
 - Phase 11A acceptance note
 - documentation sync: roadmap, decision log, ADR, project context, OpenAPI

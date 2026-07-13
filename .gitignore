@@ -20,3 +20,6 @@ frontend/*.log
 
 # Local runtime logs
 backend/*.log
+
+# Local development plans
+docs/plan/

@@ -173,6 +173,34 @@ class ScheduledCrawlServiceIntegrationTest {
     }
 
     @Test
+    void shouldExcludeSourceAfterDisablingViaStatusAndReincludeAfterReenable() {
+        SourceConfigVO source = createSource(60);
+        mockHackerNewsItems();
+
+        ScheduledCrawlResult firstRun = scheduledCrawlService.runOnce();
+        assertThat(firstRun.scannedSources()).isEqualTo(1);
+        assertThat(firstRun.triggeredTasks()).isEqualTo(1);
+
+        sourceConfigService.updateStatus(source.id(), false);
+
+        ScheduledCrawlResult afterDisable = scheduledCrawlService.runOnce();
+        assertThat(afterDisable.scannedSources()).isZero();
+        assertThat(afterDisable.triggeredTasks()).isZero();
+        assertThat(afterDisable.sources()).isEmpty();
+
+        sourceConfigService.updateStatus(source.id(), true);
+
+        ScheduledCrawlResult afterReenable = scheduledCrawlService.runOnce();
+        assertThat(afterReenable.scannedSources()).isEqualTo(1);
+        assertThat(afterReenable.triggeredTasks()).isZero();
+        ScheduledSourceResult reenableResult = afterReenable.sources().get(0);
+        assertThat(reenableResult.sourceId()).isEqualTo(source.id());
+        assertThat(reenableResult.skipReason()).isEqualTo(ScheduledCrawlService.SKIP_REASON_NOT_YET_DUE);
+
+        assertThat(count("crawl_task")).isEqualTo(1);
+    }
+
+    @Test
     void shouldReuseIdempotencyKeyWithinSameBucket() {
         SourceConfigVO source = createSource(60);
         mockHackerNewsItems();
