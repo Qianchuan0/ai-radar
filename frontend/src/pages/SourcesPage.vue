@@ -147,6 +147,8 @@ function sourceLabel(sourceType: SourceType): string {
   if (sourceType === "WEIBO_HOT_SEARCH") return "微博热搜";
   if (sourceType === "HACKER_NEWS_SEARCH") return "Hacker News Search";
   if (sourceType === "TWITTER") return "Twitter";
+  if (sourceType === "BING_SEARCH") return "Bing 搜索";
+  if (sourceType === "DUCKDUCKGO_SEARCH") return "DuckDuckGo 搜索";
   return "Hacker News";
 }
 </script>

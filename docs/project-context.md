@@ -176,6 +176,29 @@ Phase 12B-1 fields:
 - `view_count`
 - `created_at`
 
+### HTML Search Sources (Bing, DuckDuckGo)
+
+Purpose: discover AI news, product releases, technical articles, and developer discussions from the general Web via HTML parsing.
+
+Phase 12B-2 fields:
+
+- `title` (search result title)
+- `url` (canonical URL after sanitization)
+- `snippet` (search result description)
+- `displayUrl` (display URL for Bing)
+- `rank` (search result position)
+- `query` (search keyword)
+- `market`/`region` (market/region setting)
+- `freshnessDays` (filter parameter)
+
+Special handling:
+
+- Lightweight HTML parsing via jsoup, no browser automation
+- Blocked page detection (CAPTCHA, 403, 429) with explicit upstream errors
+- URL sanitization removes tracking parameters (utm_*, fbclid, gclid)
+- DuckDuckGo `uddg` redirect decoding to extract real URLs
+- Conservative rate limiting (maxAttempts=1, minRequestInterval=10s)
+
 ## MVP Functional Modules
 
 1. source configuration, enable/disable controls, and frontend source management page
@@ -194,6 +217,7 @@ Phase 12B-1 fields:
 14. lightweight scheduled daily report runner that reuses the existing report generation service
 15. Sogou Search as the first Chinese platform source via Tencent Cloud Web Search API, with manual TC3-HMAC-SHA256 signature
 16. Phase 12B-1 structured JSON/API sources: Weibo Hot Search, Hacker News Algolia Search, and Twitter/X via `twitterapi.io`
+17. Phase 12B-2 HTML search sources: Bing and DuckDuckGo with lightweight jsoup parsing, block detection, and explicit failure handling
 
 ## Phase 1 Minimal Closed Loop
 

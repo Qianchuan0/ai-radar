@@ -72,6 +72,16 @@ describe("hot cluster query helpers", () => {
         expect(filters.sourceType).toBe("TWITTER");
     });
 
+    it("parses BING_SEARCH sourceType from query", () => {
+        const filters = parseHotClusterFilters({ sourceType: "BING_SEARCH" });
+        expect(filters.sourceType).toBe("BING_SEARCH");
+    });
+
+    it("parses DUCKDUCKGO_SEARCH sourceType from query", () => {
+        const filters = parseHotClusterFilters({ sourceType: "DUCKDUCKGO_SEARCH" });
+        expect(filters.sourceType).toBe("DUCKDUCKGO_SEARCH");
+    });
+
     it("creates an isolated reset payload", () => {
         const first = resetHotClusterFilters();
         const second = resetHotClusterFilters();

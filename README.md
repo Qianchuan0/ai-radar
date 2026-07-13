@@ -20,7 +20,7 @@ AI information is fragmented across research feeds, developer communities, and o
 - Start from `arXiv`, `Hacker News`, `GitHub`, and `Hugging Face Models`.
 - Prove the closed loop from source configuration to event-level hot-cluster display.
 - Current verified path: `source_config -> crawl_task -> raw_item -> hot_item -> hot_cluster -> hot_score -> cluster_analysis (real OpenAI provider or fake fallback) -> subscription_rule -> alert_record -> daily_report -> evaluation_run -> APIs -> frontend list/detail/alerts/reports/evaluation/sources`.
-- Current verified source expansion: `Hacker News + arXiv + GitHub + Hugging Face Models + Sogou Search + Weibo Hot Search + Hacker News Search + Twitter`, with each added source covered through client parsing, raw retention, normalization, clustering, scoring, and frontend-compatible source filtering.
+- Current verified source expansion: `Hacker News + arXiv + GitHub + Hugging Face Models + Sogou Search + Weibo Hot Search + Hacker News Search + Twitter + Bing Search + DuckDuckGo Search`, with each added source covered through client parsing, raw retention, normalization, clustering, scoring, and frontend-compatible source filtering.
 
 ## Core Concepts
 
@@ -39,7 +39,7 @@ AI information is fragmented across research feeds, developer communities, and o
 
 ## Current Status
 
-**Phase 1 completed / Phase 2 completed / Phase 3 completed / Phase 4 completed / Phase 5 completed / Phase 6 completed / Phase 7 completed / Phase 8 completed / Phase 9A completed / Phase 10 completed / Phase 11A in progress / Phase 11B in progress / Phase 12A in progress / Phase 12B-1 completed**
+**Phase 1 completed / Phase 2 completed / Phase 3 completed / Phase 4 completed / Phase 5 completed / Phase 6 completed / Phase 7 completed / Phase 8 completed / Phase 9A completed / Phase 10 completed / Phase 11A in progress / Phase 11B in progress / Phase 12A in progress / Phase 12B-1 completed / Phase 12B-2 completed**
 
 Phase 10 replaces the Phase 5 fake structured analysis with a real OpenAI-compatible provider backed by the official `openai-java` SDK and the Chat Completions API. Chat Completions is chosen over the Responses API so the same code path works against both OpenAI itself and OpenAI-compatible gateways (e.g. DeepSeek). The wire schema mode is `response_format=json_object` plus an in-prompt schema description, because the stricter `json_schema` mode is not implemented by every compatible gateway. The application starts even when the API key is missing; in that case analysis runs are persisted with `ANALYSIS_PROVIDER_NOT_CONFIGURED` until `AI_RADAR_OPENAI_API_KEY` is provided. Default tests stay offline, `.\scripts\accept-phase-10.ps1` is the repeatable acceptance path, and an optional `scripts/live-verify-openai.ps1` path verified the real provider end-to-end against DeepSeek on 2026-07-12.
 
@@ -48,3 +48,5 @@ Phase 11A and Phase 11B extend operations with lightweight, configuration-gated 
 Phase 12A adds the first Chinese platform source via the Tencent Cloud Web Search API (wsa, sourced from Sogou Search). The integration uses a manually implemented TC3-HMAC-SHA256 signer (`TencentCloudV3Signer`) rather than the Tencent Cloud SDK, keeping the dependency footprint unchanged. The application starts even when `AI_RADAR_SOGOU_SEARCH_SECRET_ID` or `AI_RADAR_SOGOU_SEARCH_SECRET_KEY` is missing; in that case crawl tasks fail with `CRAWL.PROVIDER_NOT_CONFIGURED`.
 
 Phase 12B-1 adds three structured JSON/API sources: Weibo Hot Search, Hacker News Algolia Search, and Twitter/X via `twitterapi.io`. Weibo and Hacker News Search run without credentials; Twitter is optional and returns `CRAWL.PROVIDER_NOT_CONFIGURED` during crawl when `AI_RADAR_TWITTER_API_KEY` is missing, without blocking application startup. The repeatable acceptance path is `.\scripts\accept-phase-12b-1.ps1`.
+
+Phase 12B-2 adds HTML search sources (Bing and DuckDuckGo) using lightweight jsoup parsing. Each source has independent client, config validation, collector, and normalizer to keep failures isolated. Blocked pages (403/429/CAPTCHA/challenge) are detected via keyword matching and map to explicit `CRAWL_UPSTREAM_ERROR` rather than being treated as empty results. Default settings use `maxAttempts=1` and `minRequestInterval=10s` to avoid aggressive retries. Google Search is excluded from 12B-2A due to higher anti-crawl risk and reserved for optional 12B-2B only if local live probes succeed. The repeatable acceptance path is `.\scripts\accept-phase-12b-2.ps1`.

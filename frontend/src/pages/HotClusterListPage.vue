@@ -32,6 +32,8 @@
                 <option value="WEIBO_HOT_SEARCH">微博热搜</option>
                 <option value="HACKER_NEWS_SEARCH">Hacker News Search</option>
                 <option value="TWITTER">Twitter</option>
+                <option value="BING_SEARCH">Bing 搜索</option>
+                <option value="DUCKDUCKGO_SEARCH">DuckDuckGo 搜索</option>
               </select>
             </div>
           </label>
@@ -357,6 +359,8 @@ function sourceTypeLabel(sourceType: SourceType): string {
   if (sourceType === "WEIBO_HOT_SEARCH") return "微博热搜";
   if (sourceType === "HACKER_NEWS_SEARCH") return "Hacker News Search";
   if (sourceType === "TWITTER") return "Twitter";
+  if (sourceType === "BING_SEARCH") return "Bing 搜索";
+  if (sourceType === "DUCKDUCKGO_SEARCH") return "DuckDuckGo 搜索";
   return "Hacker News";
 }
 

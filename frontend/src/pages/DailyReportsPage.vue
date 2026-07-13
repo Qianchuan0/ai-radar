@@ -243,6 +243,8 @@ function sourceLabel(source: SourceType): string {
   if (source === "WEIBO_HOT_SEARCH") return "微博热搜";
   if (source === "HACKER_NEWS_SEARCH") return "Hacker News Search";
   if (source === "TWITTER") return "Twitter";
+  if (source === "BING_SEARCH") return "Bing 搜索";
+  if (source === "DUCKDUCKGO_SEARCH") return "DuckDuckGo 搜索";
   return "Hacker News";
 }
 

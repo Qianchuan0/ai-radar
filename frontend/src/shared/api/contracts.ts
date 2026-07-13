@@ -13,7 +13,7 @@ export interface PageResponse<T> {
     totalPages: number;
 }
 
-export type SourceType = "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE" | "SOGOU_SEARCH" | "WEIBO_HOT_SEARCH" | "HACKER_NEWS_SEARCH" | "TWITTER";
+export type SourceType = "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE" | "SOGOU_SEARCH" | "WEIBO_HOT_SEARCH" | "HACKER_NEWS_SEARCH" | "TWITTER" | "BING_SEARCH" | "DUCKDUCKGO_SEARCH";
 export type HotClusterSort = "SCORE_DESC" | "LATEST";
 export type HotClusterStatus = "ACTIVE" | "MERGED" | "ARCHIVED";
 export type AnalysisRunStatus = "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED";

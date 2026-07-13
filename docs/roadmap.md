@@ -289,3 +289,34 @@
 - raw-to-hot integration tests for all three sources
 - Phase 12B-1 acceptance script
 - documentation sync: roadmap, decision log, project context, README
+
+## Phase 12B-2: HTML Search Sources (Bing + DuckDuckGo)
+
+**Status:** Completed
+
+### Goals
+
+- integrate HTML search sources using lightweight jsoup parsing
+- validate that AI Radar can safely handle page structure changes, anti-crawl failures, empty results, and rate limiting
+- keep single-source isolation without introducing browser automation or proxy pools
+
+### Deliverables
+
+- jsoup 1.18.3 dependency for HTML parsing
+- HTML search common support components (htmlsearch package) with headers, URL sanitization, block detection, and parse exceptions
+- `BING_SEARCH` source type with Bing HTML parsing, safe User-Agent, rate limiting, and failure isolation
+- `DUCKDUCKGO_SEARCH` source type with DuckDuckGo HTML parsing, redirect URL decoding, and block detection
+- config validation for query, limit, freshnessDays, market/safeSearch (Bing) and region (DuckDuckGo)
+- raw-to-hot normalizers for both sources with WEB_PAGE item_type, rank-based points, and host/market tags
+- frontend source labels "Bing 搜索", "DuckDuckGo 搜索"
+- unit tests for request validation, URL sanitization, and block detection
+- raw-to-hot integration tests for both sources
+- Phase 12B-2 acceptance script and optional live verification script
+- documentation sync: roadmap, decision log, project context, README
+
+### Notes
+
+- HTML sources default to `maxAttempts=1` to avoid consecutive failed requests
+- Recommended `crawlIntervalMinutes` >= 180 for HTML sources
+- Parse failures, 403/429, and CAPTCHA pages map to clear `CRAWL_UPSTREAM_ERROR` with explicit messages
+- Google Search was not included in 12B-2A due to higher anti-crawl risk; reserved for optional 12B-2B if local live probes succeed

@@ -117,6 +117,8 @@ public class SourceConfigService {
             case WEIBO_HOT_SEARCH -> validateWeiboHotSearchConfig(config);
             case HACKER_NEWS_SEARCH -> validateHackerNewsSearchConfig(config);
             case TWITTER -> validateTwitterConfig(config);
+            case BING_SEARCH -> validateBingSearchConfig(config);
+            case DUCKDUCKGO_SEARCH -> validateDuckDuckGoSearchConfig(config);
         }
     }
 
@@ -370,5 +372,69 @@ public class SourceConfigService {
         }
         // onlyOriginalTweets is optional, defaults to true
         config.path("onlyOriginalTweets").asBoolean(true);
+    }
+
+    private void validateBingSearchConfig(JsonNode config) {
+        String query = config.path("query").asText("").trim();
+        if (query.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Bing Search query must not be blank."
+            );
+        }
+        int limit = config.path("limit").asInt(10);
+        if (limit < 1 || limit > 20) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Bing Search limit must be between 1 and 20."
+            );
+        }
+        int freshnessDays = config.path("freshnessDays").asInt(7);
+        if (freshnessDays < 1 || freshnessDays > 30) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Bing Search freshnessDays must be between 1 and 30."
+            );
+        }
+        String market = config.path("market").asText("en-US").trim();
+        if (!market.matches("^[a-z]{2}-[A-Z]{2}$")) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Bing Search market must be in format like en-US, zh-CN."
+            );
+        }
+        String safeSearch = config.path("safeSearch").asText("moderate").trim();
+        if (!safeSearch.equals("off") && !safeSearch.equals("moderate") && !safeSearch.equals("strict")) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Bing Search safeSearch must be one of off, moderate, strict."
+            );
+        }
+    }
+
+    private void validateDuckDuckGoSearchConfig(JsonNode config) {
+        String query = config.path("query").asText("").trim();
+        if (query.isBlank()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "DuckDuckGo Search query must not be blank."
+            );
+        }
+        int limit = config.path("limit").asInt(10);
+        if (limit < 1 || limit > 20) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "DuckDuckGo Search limit must be between 1 and 20."
+            );
+        }
+        int freshnessDays = config.path("freshnessDays").asInt(7);
+        if (freshnessDays < 1 || freshnessDays > 30) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "DuckDuckGo Search freshnessDays must be between 1 and 30."
+            );
+        }
+        // region is optional, defaults to wt-wt
+        config.path("region").asText("wt-wt");
     }
 }

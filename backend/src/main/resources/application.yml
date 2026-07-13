@@ -74,6 +74,18 @@ ai-radar:
       connect-timeout: ${AI_RADAR_TWITTER_CONNECT_TIMEOUT:3s}
       read-timeout: ${AI_RADAR_TWITTER_READ_TIMEOUT:8s}
       max-attempts: ${AI_RADAR_TWITTER_MAX_ATTEMPTS:2}
+    bing-search:
+      base-url: ${AI_RADAR_BING_SEARCH_BASE_URL:https://www.bing.com}
+      connect-timeout: ${AI_RADAR_BING_SEARCH_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_BING_SEARCH_READ_TIMEOUT:10s}
+      max-attempts: ${AI_RADAR_BING_SEARCH_MAX_ATTEMPTS:1}
+      min-request-interval: ${AI_RADAR_BING_SEARCH_MIN_REQUEST_INTERVAL:10s}
+    duckduckgo-search:
+      base-url: ${AI_RADAR_DDG_SEARCH_BASE_URL:https://html.duckduckgo.com}
+      connect-timeout: ${AI_RADAR_DDG_SEARCH_CONNECT_TIMEOUT:3s}
+      read-timeout: ${AI_RADAR_DDG_SEARCH_READ_TIMEOUT:10s}
+      max-attempts: ${AI_RADAR_DDG_SEARCH_MAX_ATTEMPTS:1}
+      min-request-interval: ${AI_RADAR_DDG_SEARCH_MIN_REQUEST_INTERVAL:10s}
   operations:
     scheduled-crawl:
       enabled: ${AI_RADAR_SCHEDULED_CRAWL_ENABLED:false}

@@ -91,7 +91,9 @@ function parseSourceType(value: unknown): SourceType | undefined {
         parsed === "SOGOU_SEARCH" ||
         parsed === "WEIBO_HOT_SEARCH" ||
         parsed === "HACKER_NEWS_SEARCH" ||
-        parsed === "TWITTER"
+        parsed === "TWITTER" ||
+        parsed === "BING_SEARCH" ||
+        parsed === "DUCKDUCKGO_SEARCH"
     ) {
         return parsed;
     }
