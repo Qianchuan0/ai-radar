@@ -85,8 +85,8 @@
         <article class="metric-card">
           <div>
             <div class="metric-label">热点总数</div>
-            <div class="metric-value">{{ filteredRows.length }}</div>
-            <div class="metric-note">当前列表结果</div>
+            <div class="metric-value">{{ pagination.totalElements }}</div>
+            <div class="metric-note">后端分页结果</div>
           </div>
         </article>
         <article class="metric-card">
@@ -230,7 +230,7 @@
           </table>
 
           <footer class="footer">
-            <div>共 {{ filteredRows.length }} 条</div>
+            <div>共 {{ pagination.totalElements }} 条</div>
             <div class="pager">
               <button class="page" :disabled="currentPage <= 1" type="button" @click="changePage(currentPage - 1)">‹</button>
               <button
@@ -277,6 +277,12 @@ const loading = ref(false);
 const errorMessage = ref("");
 const items = ref<HotClusterSummary[]>([]);
 const generatedAt = ref("");
+const pagination = ref({
+  page: filters.page,
+  size: filters.size,
+  totalElements: 0,
+  totalPages: 1
+});
 
 const filteredRows = computed(() => {
   const query = filters.q.trim().toLowerCase();
@@ -289,13 +295,17 @@ const filteredRows = computed(() => {
   });
 });
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / filters.size)));
+const totalPages = computed(() => Math.max(1, pagination.value.totalPages));
 const currentPage = computed(() => Math.min(filters.page, totalPages.value));
-const pagedRows = computed(() => {
-  const start = (currentPage.value - 1) * filters.size;
-  return filteredRows.value.slice(start, start + filters.size);
+const pagedRows = computed(() => filteredRows.value);
+const pages = computed(() => {
+  const visibleCount = 7;
+  const half = Math.floor(visibleCount / 2);
+  const maxStart = Math.max(1, totalPages.value - visibleCount + 1);
+  const start = Math.min(Math.max(1, currentPage.value - half), maxStart);
+  const end = Math.min(totalPages.value, start + visibleCount - 1);
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 });
-const pages = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1).slice(0, 7));
 const averageScore = computed(() => {
   if (!filteredRows.value.length) return 0;
   return Math.round(filteredRows.value.reduce((sum, item) => sum + Number(item.score?.total ?? 0), 0) / filteredRows.value.length);
@@ -324,9 +334,21 @@ async function reload(): Promise<void> {
   try {
     const response = await fetchHotClusters(toHotClusterListQuery(filters));
     items.value = response.items;
+    pagination.value = {
+      page: response.page,
+      size: response.size,
+      totalElements: response.totalElements,
+      totalPages: response.totalPages
+    };
     generatedAt.value = new Date().toISOString();
   } catch (error) {
     items.value = [];
+    pagination.value = {
+      page: filters.page,
+      size: filters.size,
+      totalElements: 0,
+      totalPages: 1
+    };
     errorMessage.value = getErrorMessage(error);
   } finally {
     loading.value = false;

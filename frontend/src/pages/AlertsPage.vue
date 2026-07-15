@@ -227,7 +227,9 @@ const sourceOptions: SourceType[] = [
   "SOGOU_SEARCH",
   "WEIBO_HOT_SEARCH",
   "HACKER_NEWS_SEARCH",
-  "TWITTER"
+  "TWITTER",
+  "BING_SEARCH",
+  "DUCKDUCKGO_SEARCH"
 ];
 
 const subscriptions = ref<SubscriptionRule[]>([]);

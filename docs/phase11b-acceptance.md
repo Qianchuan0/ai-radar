@@ -1,5 +1,12 @@
 # Phase 11B Acceptance: Scheduled Daily Report Generation
 
+**Status:** Accepted
+**Date:** 2026-07-15
+
+## Acceptance Status
+
+Phase 11B has passed the acceptance script verification and is ready for maintainer review.
+
 This document covers the second lightweight scheduled operations step in `ai-radar`:
 
 - generate daily reports through an optional Spring Scheduler runner

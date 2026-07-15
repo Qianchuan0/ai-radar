@@ -48,7 +48,7 @@ public class OpenAiAnalysisPromptFactory {
               "evidenceRefs": [
                 {
                   "hotItemId": number,
-                  "sourceType": "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE" | "SOGOU_SEARCH" | "WEIBO_HOT_SEARCH" | "HACKER_NEWS_SEARCH" | "TWITTER",
+                  "sourceType": "ARXIV" | "HACKER_NEWS" | "GITHUB" | "HUGGING_FACE" | "SOGOU_SEARCH" | "WEIBO_HOT_SEARCH" | "HACKER_NEWS_SEARCH" | "TWITTER" | "BING_SEARCH" | "DUCKDUCKGO_SEARCH",
                   "title": string,
                   "sourceUrl": string
                 }

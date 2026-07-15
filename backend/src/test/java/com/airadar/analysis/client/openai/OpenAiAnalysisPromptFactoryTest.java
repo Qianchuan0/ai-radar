@@ -25,6 +25,14 @@ class OpenAiAnalysisPromptFactoryTest {
     }
 
     @Test
+    void instructionsShouldListEverySupportedSourceType() {
+        String instructions = factory.buildInstructions();
+
+        assertThat(SourceType.values())
+                .allSatisfy(sourceType -> assertThat(instructions).contains("\"" + sourceType.name() + "\""));
+    }
+
+    @Test
     void inputShouldContainClusterMetadataAndEvidenceItems() {
         ClusterEvidencePack.EvidenceItemSnapshot first = new ClusterEvidencePack.EvidenceItemSnapshot(
                 101L,

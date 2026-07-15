@@ -1,5 +1,12 @@
 # Phase 11A Acceptance
 
+**Status:** Accepted
+**Date:** 2026-07-15
+
+## Acceptance Status
+
+Phase 11A has passed the acceptance script verification and is ready for maintainer review.
+
 ## Scope
 
 This document covers the first lightweight scheduled operations step in `ai-radar`:

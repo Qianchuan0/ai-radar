@@ -203,7 +203,7 @@
 
 ## Phase 11A: Lightweight Scheduled Operations
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -226,7 +226,7 @@
 
 ## Phase 11B: Scheduled Daily Report Generation
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -248,7 +248,7 @@
 
 ## Phase 12A: Sogou Search Source
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -320,3 +320,43 @@
 - Recommended `crawlIntervalMinutes` >= 180 for HTML sources
 - Parse failures, 403/429, and CAPTCHA pages map to clear `CRAWL_UPSTREAM_ERROR` with explicit messages
 - Google Search was not included in 12B-2A due to higher anti-crawl risk; reserved for optional 12B-2B if local live probes succeed
+
+## Phase 13A: V1 Baseline Freeze
+
+**Status:** Completed
+
+### Goals
+
+- close the Phase 11/12 engineering baseline before V2 scoring and clustering work
+- make current V1 clustering and V1 scoring behavior replayable
+- keep this phase focused on verification and documentation, not algorithm changes
+
+### Deliverables
+
+- `V1BaselineReplayIntegrationTest` for deterministic V1 cluster and score replay
+- `docs/v1-baseline-behavior.md` baseline behavior guide
+- Phase 13A acceptance script
+- Phase 13A acceptance note
+- documentation sync: README, roadmap, decision log
+
+## Phase 13B: Source Roles and Normalized Signal Adapters
+
+**Status:** Completed
+
+### Goals
+
+- separate source semantics from V1 compatibility metrics
+- introduce a minimal normalized signal model for future growth tracking and Score V2
+- keep V1 scoring unchanged
+
+### Deliverables
+
+- `SourceRole`
+- `NormalizedSignal`
+- `SourceSignalAdapter`
+- `SourceSignalAdapterRegistry`
+- first adapters for Hacker News, GitHub, Hugging Face, Bing Search, and DuckDuckGo Search
+- adapter/model/registry unit tests
+- Phase 13B acceptance script
+- Phase 13B acceptance note
+- `docs/signal-layer-guide.md`
