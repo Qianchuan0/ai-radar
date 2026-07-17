@@ -1,7 +1,7 @@
 # Phase 13B Acceptance: Source Roles and Normalized Signals
 
 **Date:** 2026-07-15
-**Status:** Accepted
+**Status:** Complete
 
 ## Scope
 

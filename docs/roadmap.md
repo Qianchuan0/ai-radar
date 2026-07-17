@@ -399,3 +399,52 @@
 - No multi-window support (1h/6h/24h - 24h only)
 - No complex cluster time-series aggregation
 - No new infrastructure or dependencies
+
+## Phase 15: Cross-Source Score V2 Shadow
+
+**Status:** In Progress
+
+### Goals
+
+- introduce a semantic cross-source score (`cross-source-score-v2`) alongside `hn-score-v1`
+- prove V2 separates cumulative scale from current growth velocity
+- keep V1 as the authoritative ranking; V2 is shadow-only
+
+### Deliverables
+
+- `ClusterScoringStrategy` interface
+- `HnScoreV1Strategy` transparent wrapper over unchanged `RuleBasedScoringService`
+- `CrossSourceScoreV2Strategy` with 7 weighted dimensions
+- `ScoringOrchestrator` running V2 in shadow (failure does not block V1)
+- 7 score calculators: momentum, adoption, discussion, authority, relevance, evidenceDiversity, freshness
+- `HotScoreMapper` query methods for version comparison
+- `GET /api/v1/hot-clusters/{id}/scores` comparison API
+- Unit tests: calculator coverage, V1/V2 comparison, shadow failure handling
+- Phase 15 acceptance script
+
+### V2 Score Dimensions (total 100)
+
+| Dimension | Weight | Source |
+| --- | ---: | --- |
+| momentum | 0.25 | primary item 24h `GrowthMetrics.momentumScore` with confidence attenuation |
+| adoption | 0.15 | primary `NormalizedSignal.adoption` + cluster boost |
+| relevance | 0.15 | primary `NormalizedSignal.relevance` (search rank) or neutral baseline |
+| freshness | 0.15 | primary item age (72h decay, matches V1) |
+| discussion | 0.10 | primary `NormalizedSignal.discussion` + cluster boost |
+| authority | 0.10 | highest-authority `SourceRole` present |
+| evidenceDiversity | 0.10 | distinct `SourceRole` count with search-URL dedup |
+
+### Scope
+
+**Included in Phase 15:**
+- V2 score persisted in `hot_score` with `scoring_version = cross-source-score-v2`
+- `score_components` JSON with full per-dimension explainability
+- Search-source deduplication (Bing/DuckDuckGo/Sogou same URL = one DISCOVERY)
+- V2 runs in `REQUIRES_NEW` transaction; failures are logged and swallowed
+
+**Explicitly NOT in Phase 15:**
+- No replacement of V1 ranking (default sort unchanged)
+- No LLM scoring or learned weights
+- No multi-window momentum beyond 24h
+- No `RuleBasedScoringService` code changes (zero V1 behavior change)
+- No Flyway migration (hot_score already supports multiple versions)

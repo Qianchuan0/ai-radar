@@ -4,6 +4,7 @@ import com.airadar.evaluation.entity.EvaluationCaseEntity;
 import com.airadar.evaluation.model.EvaluationCaseType;
 import com.airadar.scoring.entity.HotScoreEntity;
 import com.airadar.scoring.mapper.HotScoreMapper;
+import com.airadar.scoring.service.RuleBasedScoringService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,6 +53,7 @@ public class ScoreThresholdVerifier implements CaseVerifier {
         List<HotScoreEntity> scores = hotScoreMapper.selectList(
                 new LambdaQueryWrapper<HotScoreEntity>()
                         .eq(HotScoreEntity::getHotClusterId, clusterId)
+                        .eq(HotScoreEntity::getScoringVersion, RuleBasedScoringService.SCORING_VERSION)
                         .orderByDesc(HotScoreEntity::getCalculatedAt)
                         .orderByDesc(HotScoreEntity::getId)
                         .last("LIMIT 1")

@@ -15,6 +15,7 @@ import com.airadar.item.entity.HotItemEntity;
 import com.airadar.item.mapper.HotItemMapper;
 import com.airadar.scoring.entity.HotScoreEntity;
 import com.airadar.scoring.mapper.HotScoreMapper;
+import com.airadar.scoring.service.RuleBasedScoringService;
 import com.airadar.scoring.vo.HotScoreVO;
 import com.airadar.source.model.SourceType;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -141,6 +142,7 @@ public class HotClusterQueryService {
         HotScoreEntity score = hotScoreMapper.selectOne(
                 new LambdaQueryWrapper<HotScoreEntity>()
                         .eq(HotScoreEntity::getHotClusterId, clusterId)
+                        .eq(HotScoreEntity::getScoringVersion, RuleBasedScoringService.SCORING_VERSION)
                         .orderByDesc(HotScoreEntity::getCalculatedAt)
                         .orderByDesc(HotScoreEntity::getId)
                         .last("LIMIT 1")

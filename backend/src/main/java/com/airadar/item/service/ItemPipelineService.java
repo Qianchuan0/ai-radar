@@ -8,7 +8,7 @@ import com.airadar.item.model.NormalizedHotItem;
 import com.airadar.item.normalizer.HotItemNormalizer;
 import com.airadar.item.normalizer.HotItemNormalizerRegistry;
 import com.airadar.raw.entity.RawItemEntity;
-import com.airadar.scoring.service.RuleBasedScoringService;
+import com.airadar.scoring.strategy.ScoringOrchestrator;
 import com.airadar.signal.adapter.SourceSignalAdapterRegistry;
 import com.airadar.signal.model.NormalizedSignal;
 import com.airadar.signal.service.SignalSnapshotService;
@@ -27,7 +27,7 @@ public class ItemPipelineService {
     private final SourceSignalAdapterRegistry sourceSignalAdapterRegistry;
     private final SignalSnapshotService signalSnapshotService;
     private final RuleBasedClusterService clusterService;
-    private final RuleBasedScoringService scoringService;
+    private final ScoringOrchestrator scoringOrchestrator;
 
     public ItemPipelineService(
             HotItemNormalizerRegistry normalizerRegistry,
@@ -35,14 +35,14 @@ public class ItemPipelineService {
             SourceSignalAdapterRegistry sourceSignalAdapterRegistry,
             SignalSnapshotService signalSnapshotService,
             RuleBasedClusterService clusterService,
-            RuleBasedScoringService scoringService
+            ScoringOrchestrator scoringOrchestrator
     ) {
         this.normalizerRegistry = normalizerRegistry;
         this.hotItemService = hotItemService;
         this.sourceSignalAdapterRegistry = sourceSignalAdapterRegistry;
         this.signalSnapshotService = signalSnapshotService;
         this.clusterService = clusterService;
-        this.scoringService = scoringService;
+        this.scoringOrchestrator = scoringOrchestrator;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -80,7 +80,7 @@ public class ItemPipelineService {
         }
 
         try {
-            scoringService.score(cluster);
+            scoringOrchestrator.run(cluster);
         } catch (RuntimeException exception) {
             throw new ItemProcessingException(CrawlStage.SCORE, exception);
         }

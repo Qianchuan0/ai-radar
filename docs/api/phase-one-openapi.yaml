@@ -289,6 +289,31 @@ paths:
                 $ref: "#/components/schemas/HotClusterDetailResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/hot-clusters/{clusterId}/scores:
+    get:
+      tags: [Hot Clusters]
+      summary: List all persisted scores for a cluster across scoring versions
+      description: >
+        Returns every hot_score record for the cluster, including
+        hn-score-v1 (authoritative, drives the default ranking) and
+        cross-source-score-v2 (Phase 15 shadow score). Exposes both versions
+        side by side for comparison and offline analysis.
+      operationId: listClusterScores
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/ClusterId"
+      responses:
+        "200":
+          description: Score records returned
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HotClusterScoreListResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/v1/hot-clusters/{clusterId}/analysis-runs:
     post:
       tags: [Analysis]
@@ -1509,6 +1534,43 @@ components:
         timestamp:
           type: string
           format: date-time
+    HotClusterScoreListResponse:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          const: OK
+        message:
+          const: Success
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/HotClusterScoreItem"
+        timestamp:
+          type: string
+          format: date-time
+    HotClusterScoreItem:
+      type: object
+      required: [scoringVersion, totalScore, calculatedAt, scoreComponents]
+      properties:
+        scoringVersion:
+          type: string
+          description: >
+            Scoring version tag. hn-score-v1 is the authoritative default;
+            cross-source-score-v2 is the Phase 15 shadow score.
+        totalScore:
+          type: number
+          format: double
+        calculatedAt:
+          type: string
+          format: date-time
+        scoreComponents:
+          type: object
+          additionalProperties: true
+          description: >
+            Version-specific breakdown. V1 stores the legacy points/comments/
+            freshness/keyword/clusterEvidence shape; V2 stores the seven
+            weighted dimensions with reasons.
     ClusterAnalysisResponse:
       type: object
       required: [code, message, data, timestamp]

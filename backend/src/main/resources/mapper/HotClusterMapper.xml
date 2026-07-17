@@ -35,6 +35,7 @@
                     SELECT hs.total_score
                     FROM hot_score hs
                     WHERE hs.hot_cluster_id = hc.id
+                      AND hs.scoring_version = 'hn-score-v1'
                     ORDER BY hs.calculated_at DESC, hs.id DESC
                     LIMIT 1
                 ), 0) DESC,
