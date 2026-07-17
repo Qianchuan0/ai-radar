@@ -360,3 +360,42 @@
 - Phase 13B acceptance script
 - Phase 13B acceptance note
 - `docs/signal-layer-guide.md`
+
+## Phase 14: Signal Snapshot and Growth Trend Calculation
+
+**Status:** In Progress
+
+### Goals
+
+- enable time-series signal tracking for growth trend calculation
+- provide 24h growth metrics without changing V1 scoring
+- create the foundation for future Score V2 momentum signals
+
+### Deliverables
+
+- `hot_item_signal_snapshot` table with migration V7
+- `SignalSnapshotEntity`, `SignalSnapshotMapper`, `SignalSnapshotService`
+- `GrowthCalculationService` with 24h window support
+- `GrowthMetrics`, `GrowthConfidence` models
+- `HotItemSignalController` with `/signals` and `/trend` endpoints
+- `SignalSnapshotVO`, `GrowthMetricsVO` for API responses
+- Pipeline integration: snapshot creation after `hotItemService.upsert()`
+- Unit tests for signal services
+- Controller integration tests
+- Phase 14 acceptance script
+- Documentation updates (decision log, signal layer guide)
+
+### Scope
+
+**Included in Phase 14:**
+- Signal snapshot storage for each crawl
+- 24h growth trend calculation
+- API endpoints for querying snapshots and trends
+- `observed_at = raw_item.fetched_at` (crawl-centric time tracking)
+
+**Explicitly NOT in Phase 14:**
+- No changes to `RuleBasedScoringService` V1 sorting
+- No frontend trend visualization
+- No multi-window support (1h/6h/24h - 24h only)
+- No complex cluster time-series aggregation
+- No new infrastructure or dependencies

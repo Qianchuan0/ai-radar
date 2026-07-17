@@ -1,7 +1,7 @@
 # Signal Layer Documentation
 
-**Date:** 2026-07-15
-**Phase:** 13B
+**Date:** 2026-07-17
+**Phase:** 14
 
 ## Overview
 
@@ -156,9 +156,34 @@ The signal layer enables Score V2 improvements:
 ## Current Limitations
 
 - Not yet integrated into scoring (V2 will use these signals)
-- Growth trend calculation not yet implemented (Phase 14)
+- Growth trend calculation limited to 24h window (Phase 14)
 - Some sources (arXiv, Weibo, Twitter, Sogou) not yet covered by adapters
 - Authority signal not yet used (reserved for future citation metrics)
+
+## Phase 14: Signal Snapshots and Growth Trends
+
+Phase 14 introduces time-series signal tracking:
+
+### Signal Snapshot Storage
+
+- `hot_item_signal_snapshot` table stores normalized signal snapshots
+- `observed_at = raw_item.fetched_at` (crawl-centric time tracking)
+- Unique constraint on `raw_item_id` prevents duplicate snapshots
+- Pipeline integration: snapshot created after `hotItemService.upsert()`
+
+### Growth Trend Calculation
+
+- `GrowthCalculationService` provides 24h growth metrics
+- Finds historical snapshot within ±3h of target time (24h ago)
+- Calculates deltas for attention, discussion, adoption, relevance
+- Rank delta: `previousRank - currentRank` (positive = improvement)
+- Momentum score: weighted sum of positive deltas
+- Confidence levels: `HIGH`, `MEDIUM`, `LOW`, `UNKNOWN`, `DATA_ANOMALY`, `METRIC_RESET`
+
+### API Endpoints
+
+- `GET /api/v1/hot-items/{id}/signals?limit=10` - recent snapshots
+- `GET /api/v1/hot-items/{id}/trend?window=24h` - 24h growth metrics
 
 ## Verification
 
