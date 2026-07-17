@@ -102,3 +102,11 @@ class DuckDuckGoSearchSignalAdapter extends SearchSignalAdapter {
         return SourceType.DUCKDUCKGO_SEARCH;
     }
 }
+
+@Component
+class SogouSearchSignalAdapter extends SearchSignalAdapter {
+    @Override
+    public SourceType supportedType() {
+        return SourceType.SOGOU_SEARCH;
+    }
+}

@@ -5,7 +5,7 @@
 
 ## Overview
 
-Phase 13B introduces a minimal signal layer that translates source-specific metrics into unified semantic components. This layer prepares for Score V2 while keeping V1 scoring unchanged.
+Phase 13B introduced the minimal signal layer, and Phase 14 extends it with persisted snapshots and 24h growth calculation. This layer prepares for Score V2 while keeping V1 scoring unchanged.
 
 ## Components
 
@@ -84,10 +84,17 @@ Maps HuggingFace metrics:
 
 ### SearchSignalAdapter (DISCOVERY)
 
-Maps search metrics for Bing and DuckDuckGo:
+Maps search metrics for Bing, DuckDuckGo, and Sogou:
 - `rank` → relevance (inverse rank: rank 1 = 100% relevance)
 - `attention`, `discussion`, `adoption` → 0 (search sources don't contribute social heat)
 - `rank` → preserved in `NormalizedSignal.rank`
+
+### Additional Adapters
+
+- `ArxivSignalAdapter` classifies arXiv as `PRIMARY`
+- `HackerNewsSearchSignalAdapter` classifies HN Search as `COMMUNITY`
+- `TwitterSignalAdapter` classifies Twitter as `COMMUNITY`
+- `WeiboHotSearchSignalAdapter` classifies Weibo Hot Search as `COMMUNITY`
 
 ## V1 Compatibility
 
@@ -157,7 +164,7 @@ The signal layer enables Score V2 improvements:
 
 - Not yet integrated into scoring (V2 will use these signals)
 - Growth trend calculation limited to 24h window (Phase 14)
-- Some sources (arXiv, Weibo, Twitter, Sogou) not yet covered by adapters
+- All currently implemented source types now have adapters so snapshot persistence does not break existing crawls
 - Authority signal not yet used (reserved for future citation metrics)
 
 ## Phase 14: Signal Snapshots and Growth Trends
@@ -191,10 +198,10 @@ Run backend tests to verify signal layer integration:
 
 ```bash
 cd backend
-./mvnw.cmd test
+./mvnw.cmd -Dtest=com.airadar.signal.adapter.SourceSignalAdapterTest,com.airadar.signal.adapter.SourceSignalAdapterRegistryTest,com.airadar.signal.model.NormalizedSignalTest,com.airadar.signal.service.GrowthCalculationServiceTest,com.airadar.signal.controller.HotItemSignalControllerTest test
 ```
 
 Expected:
-- All existing tests pass (156 tests)
-- SourceSignalAdapterRegistry successfully registers all adapters
+- Focused Phase 14 tests pass without changing V1 scoring behavior
+- SourceSignalAdapterRegistry successfully registers all current adapters
 - No duplicate adapter exceptions at startup

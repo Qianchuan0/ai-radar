@@ -20,11 +20,16 @@ class SourceSignalAdapterRegistryTest {
     @Test
     void shouldRegisterAndAdaptSupportedSourceTypes() {
         SourceSignalAdapterRegistry registry = new SourceSignalAdapterRegistry(List.of(
+            new ArxivSignalAdapter(),
             new HackerNewsSignalAdapter(),
             new GitHubSignalAdapter(),
             new HuggingFaceSignalAdapter(),
+            new HackerNewsSearchSignalAdapter(),
+            new TwitterSignalAdapter(),
+            new WeiboHotSearchSignalAdapter(),
             new SearchSignalAdapter(),
-            new DuckDuckGoSearchSignalAdapter()
+            new DuckDuckGoSearchSignalAdapter(),
+            new SogouSearchSignalAdapter()
         ));
         HotItemEntity item = new HotItemEntity();
         item.setSourceType(SourceType.BING_SEARCH);
@@ -32,11 +37,12 @@ class SourceSignalAdapterRegistryTest {
 
         NormalizedSignal signal = registry.adapt(item);
 
-        assertThat(registry.size()).isEqualTo(5);
+        assertThat(registry.size()).isEqualTo(10);
+        assertThat(registry.hasAdapter(SourceType.ARXIV)).isTrue();
         assertThat(registry.hasAdapter(SourceType.HACKER_NEWS)).isTrue();
         assertThat(registry.hasAdapter(SourceType.BING_SEARCH)).isTrue();
         assertThat(registry.hasAdapter(SourceType.DUCKDUCKGO_SEARCH)).isTrue();
-        assertThat(registry.hasAdapter(SourceType.SOGOU_SEARCH)).isFalse();
+        assertThat(registry.hasAdapter(SourceType.SOGOU_SEARCH)).isTrue();
         assertThat(signal.sourceType()).isEqualTo(SourceType.BING_SEARCH);
         assertThat(signal.relevance()).isEqualTo(90.0);
     }

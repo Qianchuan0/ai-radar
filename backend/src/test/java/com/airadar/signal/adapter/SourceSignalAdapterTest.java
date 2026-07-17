@@ -116,16 +116,81 @@ class SourceSignalAdapterTest {
 
     @Test
     void adaptersShouldReturnZeroSignalsForMissingMetrics() {
+        assertThat(new ArxivSignalAdapter().adapt(hotItem(SourceType.ARXIV, null)).authority()).isEqualTo(100.0);
         assertThat(new HackerNewsSignalAdapter().adapt(hotItem(SourceType.HACKER_NEWS, null)).totalSocialSignal())
             .isZero();
         assertThat(new GitHubSignalAdapter().adapt(hotItem(SourceType.GITHUB, null)).totalSocialSignal())
             .isZero();
         assertThat(new HuggingFaceSignalAdapter().adapt(hotItem(SourceType.HUGGING_FACE, null)).totalSocialSignal())
             .isZero();
+        assertThat(new HackerNewsSearchSignalAdapter().adapt(hotItem(SourceType.HACKER_NEWS_SEARCH, null)).totalSocialSignal())
+            .isZero();
+        assertThat(new TwitterSignalAdapter().adapt(hotItem(SourceType.TWITTER, null)).totalSocialSignal())
+            .isZero();
+        assertThat(new WeiboHotSearchSignalAdapter().adapt(hotItem(SourceType.WEIBO_HOT_SEARCH, null)).totalSocialSignal())
+            .isZero();
 
         NormalizedSignal searchSignal = new SearchSignalAdapter().adapt(hotItem(SourceType.BING_SEARCH, null));
         assertThat(searchSignal.relevance()).isZero();
         assertThat(searchSignal.totalSocialSignal()).isZero();
+        assertThat(new SogouSearchSignalAdapter().adapt(hotItem(SourceType.SOGOU_SEARCH, null)).relevance()).isZero();
+    }
+
+    @Test
+    void arxivAdapterShouldMapPrimarySignals() {
+        HotItemEntity item = hotItem(
+            SourceType.ARXIV,
+            metrics("authorsCount", 5, "categoriesCount", 3)
+        );
+
+        NormalizedSignal signal = new ArxivSignalAdapter().adapt(item);
+
+        assertThat(signal.sourceRole()).isEqualTo(SourceRole.PRIMARY);
+        assertThat(signal.authority()).isEqualTo(100.0);
+        assertThat(signal.adoption()).isGreaterThan(0.0);
+    }
+
+    @Test
+    void twitterAdapterShouldMapCommunitySignals() {
+        HotItemEntity item = hotItem(
+            SourceType.TWITTER,
+            metrics("likeCount", 240, "retweetCount", 80, "replyCount", 20, "quoteCount", 5, "viewCount", 5000)
+        );
+
+        NormalizedSignal signal = new TwitterSignalAdapter().adapt(item);
+
+        assertThat(signal.sourceRole()).isEqualTo(SourceRole.COMMUNITY);
+        assertThat(signal.attention()).isGreaterThan(0.0);
+        assertThat(signal.discussion()).isGreaterThan(0.0);
+        assertThat(signal.adoption()).isGreaterThan(0.0);
+    }
+
+    @Test
+    void weiboAdapterShouldMapCommunityTrendSignals() {
+        HotItemEntity item = hotItem(
+            SourceType.WEIBO_HOT_SEARCH,
+            metrics("points", 80000, "rank", 3)
+        );
+
+        NormalizedSignal signal = new WeiboHotSearchSignalAdapter().adapt(item);
+
+        assertThat(signal.sourceRole()).isEqualTo(SourceRole.COMMUNITY);
+        assertThat(signal.attention()).isGreaterThan(0.0);
+        assertThat(signal.discussion()).isGreaterThan(0.0);
+    }
+
+    @Test
+    void hackerNewsSearchAdapterShouldMapSearchDiscussionsAsCommunity() {
+        HotItemEntity item = hotItem(
+            SourceType.HACKER_NEWS_SEARCH,
+            metrics("points", 75, "commentsCount", 18)
+        );
+
+        NormalizedSignal signal = new HackerNewsSearchSignalAdapter().adapt(item);
+
+        assertThat(signal.sourceRole()).isEqualTo(SourceRole.COMMUNITY);
+        assertThat(signal.attention()).isGreaterThan(0.0);
+        assertThat(signal.discussion()).isGreaterThan(0.0);
     }
 
     private static HotItemEntity hotItem(SourceType sourceType, JsonNode metrics) {

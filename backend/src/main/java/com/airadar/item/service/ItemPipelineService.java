@@ -9,6 +9,9 @@ import com.airadar.item.normalizer.HotItemNormalizer;
 import com.airadar.item.normalizer.HotItemNormalizerRegistry;
 import com.airadar.raw.entity.RawItemEntity;
 import com.airadar.scoring.service.RuleBasedScoringService;
+import com.airadar.signal.adapter.SourceSignalAdapterRegistry;
+import com.airadar.signal.model.NormalizedSignal;
+import com.airadar.signal.service.SignalSnapshotService;
 import com.airadar.source.entity.SourceConfigEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,17 +24,23 @@ public class ItemPipelineService {
 
     private final HotItemNormalizerRegistry normalizerRegistry;
     private final HotItemService hotItemService;
+    private final SourceSignalAdapterRegistry sourceSignalAdapterRegistry;
+    private final SignalSnapshotService signalSnapshotService;
     private final RuleBasedClusterService clusterService;
     private final RuleBasedScoringService scoringService;
 
     public ItemPipelineService(
             HotItemNormalizerRegistry normalizerRegistry,
             HotItemService hotItemService,
+            SourceSignalAdapterRegistry sourceSignalAdapterRegistry,
+            SignalSnapshotService signalSnapshotService,
             RuleBasedClusterService clusterService,
             RuleBasedScoringService scoringService
     ) {
         this.normalizerRegistry = normalizerRegistry;
         this.hotItemService = hotItemService;
+        this.sourceSignalAdapterRegistry = sourceSignalAdapterRegistry;
+        this.signalSnapshotService = signalSnapshotService;
         this.clusterService = clusterService;
         this.scoringService = scoringService;
     }
@@ -52,6 +61,13 @@ public class ItemPipelineService {
         HotItemEntity hotItem;
         try {
             hotItem = hotItemService.upsert(rawItem, normalized.get());
+        } catch (RuntimeException exception) {
+            throw new ItemProcessingException(CrawlStage.PERSIST, exception);
+        }
+
+        try {
+            NormalizedSignal signal = sourceSignalAdapterRegistry.adapt(hotItem);
+            signalSnapshotService.save(rawItem, hotItem, signal);
         } catch (RuntimeException exception) {
             throw new ItemProcessingException(CrawlStage.PERSIST, exception);
         }
