@@ -23,3 +23,8 @@ backend/*.log
 
 # Local development plans
 docs/plan/
+docs/new_plan/
+
+# Phase 17A real-data evaluation samples and reports
+evaluation/samples/
+evaluation/reports/
