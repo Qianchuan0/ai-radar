@@ -451,7 +451,7 @@
 
 ## Phase 16A: Minimal Clustering Evaluation Baseline
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -484,7 +484,7 @@
 
 ## Phase 16: Event Cluster V2
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 

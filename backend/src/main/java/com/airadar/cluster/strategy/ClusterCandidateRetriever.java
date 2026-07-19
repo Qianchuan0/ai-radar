@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -102,7 +103,7 @@ public class ClusterCandidateRetriever {
                         + "WHERE canonical_url = ? AND hot_item_id <> ? "
                         + "AND event_time IS NOT NULL AND event_time >= ?",
                 Long.class,
-                canonicalUrl, excludeItemId, windowStart
+                canonicalUrl, excludeItemId, sqlTimestamp(windowStart)
         );
         for (Long id : ids) {
             signalsByItemId.putIfAbsent(id, CandidateCluster.Signal.CANONICAL_URL);
@@ -124,11 +125,11 @@ public class ClusterCandidateRetriever {
 
         List<Long> ids = jdbcTemplate.queryForList(
                 "SELECT hot_item_id FROM hot_item_feature "
-                        + "WHERE external_ids ?| ? "
+                        + "WHERE external_ids ??| ?::text[] "
                         + "AND hot_item_id <> ? "
                         + "AND event_time IS NOT NULL AND event_time >= ?",
                 Long.class,
-                createSqlTextArray(keyArray), excludeItemId, windowStart
+                createSqlTextArray(keyArray), excludeItemId, sqlTimestamp(windowStart)
         );
         for (Long id : ids) {
             signalsByItemId.putIfAbsent(id, CandidateCluster.Signal.EXTERNAL_ID);
@@ -157,7 +158,7 @@ public class ClusterCandidateRetriever {
                             + "AND hot_item_id <> ? "
                             + "AND event_time IS NOT NULL AND event_time >= ?",
                     Long.class,
-                    array.toString(), excludeItemId, windowStart
+                    array.toString(), excludeItemId, sqlTimestamp(windowStart)
             );
             for (Long id : ids) {
                 signalsByItemId.putIfAbsent(id, CandidateCluster.Signal.ENTITY);
@@ -175,11 +176,11 @@ public class ClusterCandidateRetriever {
         String[] keywordArray = feature.getKeywords().toArray(new String[0]);
         List<Long> ids = jdbcTemplate.queryForList(
                 "SELECT hot_item_id FROM hot_item_feature "
-                        + "WHERE keywords ?| ? "
+                        + "WHERE keywords ??| ?::text[] "
                         + "AND hot_item_id <> ? "
                         + "AND event_time IS NOT NULL AND event_time >= ?",
                 Long.class,
-                createSqlTextArray(keywordArray), excludeItemId, windowStart
+                createSqlTextArray(keywordArray), excludeItemId, sqlTimestamp(windowStart)
         );
         for (Long id : ids) {
             signalsByItemId.putIfAbsent(id, CandidateCluster.Signal.KEYWORD);
@@ -202,7 +203,7 @@ public class ClusterCandidateRetriever {
                             + "AND event_time IS NOT NULL AND event_time >= ? "
                             + "LIMIT ?",
                     Long.class,
-                    feature.getEventType().name(), excludeItemId, windowStart,
+                    feature.getEventType().name(), excludeItemId, sqlTimestamp(windowStart),
                     options.maxCandidates
             );
             for (Long id : ids) {
@@ -257,6 +258,10 @@ public class ClusterCandidateRetriever {
         }
         sb.append(')');
         return sb.toString();
+    }
+
+    private static Timestamp sqlTimestamp(Instant instant) {
+        return Timestamp.from(instant);
     }
 
     /**

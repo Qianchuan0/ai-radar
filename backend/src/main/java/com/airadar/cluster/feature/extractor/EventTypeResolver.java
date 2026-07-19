@@ -67,7 +67,7 @@ public class EventTypeResolver {
             this.eventType = eventType;
             this.patterns = new Pattern[needles.length];
             for (int i = 0; i < needles.length; i++) {
-                this.patterns[i] = Pattern.compile(Pattern.quote(needles[i]), Pattern.LITERAL);
+                this.patterns[i] = Pattern.compile(Pattern.quote(needles[i]));
             }
         }
 
