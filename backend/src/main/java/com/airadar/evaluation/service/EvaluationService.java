@@ -13,6 +13,8 @@ import com.airadar.evaluation.mapper.EvaluationCaseMapper;
 import com.airadar.evaluation.mapper.EvaluationCaseResultMapper;
 import com.airadar.evaluation.mapper.EvaluationDatasetMapper;
 import com.airadar.evaluation.mapper.EvaluationRunMapper;
+import com.airadar.evaluation.model.EvaluationCaseType;
+import com.airadar.evaluation.service.verifier.EvaluationPayloadValidator;
 import com.airadar.evaluation.vo.EvaluationCaseResultVO;
 import com.airadar.evaluation.vo.EvaluationCaseVO;
 import com.airadar.evaluation.vo.EvaluationDatasetVO;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,19 +39,27 @@ public class EvaluationService {
     private final EvaluationRunMapper runMapper;
     private final EvaluationCaseResultMapper caseResultMapper;
     private final EvaluationRunner evaluationRunner;
+    private final Map<EvaluationCaseType, EvaluationPayloadValidator> payloadValidators;
 
     public EvaluationService(
             EvaluationDatasetMapper datasetMapper,
             EvaluationCaseMapper caseMapper,
             EvaluationRunMapper runMapper,
             EvaluationCaseResultMapper caseResultMapper,
-            EvaluationRunner evaluationRunner
+            EvaluationRunner evaluationRunner,
+            List<EvaluationPayloadValidator> payloadValidatorBeans
     ) {
         this.datasetMapper = datasetMapper;
         this.caseMapper = caseMapper;
         this.runMapper = runMapper;
         this.caseResultMapper = caseResultMapper;
         this.evaluationRunner = evaluationRunner;
+        Map<EvaluationCaseType, EvaluationPayloadValidator> registry =
+                new EnumMap<>(EvaluationCaseType.class);
+        for (EvaluationPayloadValidator validator : payloadValidatorBeans) {
+            registry.put(validator.supportedType(), validator);
+        }
+        this.payloadValidators = registry;
     }
 
     @Transactional
@@ -83,6 +94,10 @@ public class EvaluationService {
         EvaluationDatasetEntity dataset = datasetMapper.selectById(datasetId);
         if (dataset == null) {
             throw new BusinessException(ErrorCode.EVALUATION_DATASET_NOT_FOUND);
+        }
+        EvaluationPayloadValidator validator = payloadValidators.get(request.caseType());
+        if (validator != null) {
+            validator.validate(request.targetPayload(), request.expectedPayload());
         }
         Instant now = Instant.now();
         EvaluationCaseEntity entity = new EvaluationCaseEntity();
