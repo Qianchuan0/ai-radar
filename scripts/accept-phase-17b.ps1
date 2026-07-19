@@ -191,8 +191,10 @@ try {
     Write-Section "9. V2 promotion is still deferred"
     $strategyProps = "backend/src/main/java/com/airadar/cluster/strategy/ClusterStrategyProperties.java"
     $propsContent = Get-Content $strategyProps -Raw
+    $v2StillRejected = ($propsContent -match 'Promoting V2 to the online strategy is Phase 17 work') -or
+                       ($propsContent -match 'V2 online writes are gated by ai-radar.cluster.v2-online.enabled')
     if ($propsContent -match 'ALLOWED_ONLINE_STRATEGY = "hn-rule-v1"' -and
-        $propsContent -match 'Promoting V2 to the online strategy is Phase 17 work') {
+        $v2StillRejected) {
         Step-Success "V2 stays shadow-only - Phase 17B does not flip the online strategy"
     } else {
         Step-Failure "Phase 17B must not promote V2 to the online strategy"
