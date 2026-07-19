@@ -520,3 +520,45 @@
 - No automated cluster merge/split governance (deferred to Phase 17)
 - No deletion of the V1 strategy
 - No full-table candidate scan
+
+## Phase 17B: Cluster Governance Before V2 Online Writes
+
+**Status:** In Progress
+
+### Goals
+
+- provide human-controlled, auditable, reversible cluster governance before V2 is allowed to write online membership
+- resolve Phase 16 `REVIEW_REQUIRED` decisions through a structured review queue
+- prove merge / split / move / recluster operations are safe, transactional, and reconstructable from history
+
+### Deliverables
+
+- Flyway V10 migration adding `cluster_membership_history` and `cluster_review_task`
+- `MembershipAction` / `OperatorType` / `ReviewTaskStatus` enums
+- `ClusterMembershipHistoryEntity`, `ClusterMembershipHistoryMapper`, `MembershipHistoryRecorder`
+- `ClusterReviewTaskEntity`, `ClusterReviewTaskMapper`
+- `ClusterMergeService` with self-merge / cycle / already-merged guards
+- `ClusterSplitService` with empty-source guard and optional new target cluster
+- `MoveItemService` with primary re-selection on both endpoints and singleton-source closure
+- `ReclusterService` reusing the V2 shadow evaluator (online membership unchanged)
+- `ClusterReviewService` that lazily materializes OPEN tasks and resolves them via accept (move) / reject / skip
+- `ClusterMembershipHistoryQueryService` for audit reads
+- `ClusterGovernanceController` and `ClusterReviewController` API surface
+- `ClusterGovernanceIntegrationTest` covering the full governance loop
+- Phase 17B acceptance script (`scripts/accept-phase-17b.ps1`)
+- documentation sync: roadmap, decision log
+
+### Scope
+
+**Included in Phase 17B:**
+- Manual cluster merge / split / move / recluster via API
+- Audit trail via `cluster_membership_history`
+- Review queue materialized from `REVIEW_REQUIRED` decisions
+- Every governance write is transactional and requires a human-readable `reason`
+- Moving the last active item out of a cluster closes the source cluster as `MERGED` instead of leaving an empty `ACTIVE` cluster
+
+**Explicitly NOT in Phase 17B:**
+- No automatic promotion of V2 to the online strategy
+- No frontend governance workbench (debug-only API access)
+- No workflow engine or multi-approver review
+- No removal of the V1 clustering strategy
