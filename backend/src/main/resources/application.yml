@@ -27,6 +27,9 @@ ai-radar:
       connect-timeout: ${AI_RADAR_OPENAI_CONNECT_TIMEOUT:5s}
       read-timeout: ${AI_RADAR_OPENAI_READ_TIMEOUT:30s}
       max-attempts: ${AI_RADAR_OPENAI_MAX_ATTEMPTS:2}
+  cluster:
+    strategy: ${AI_RADAR_CLUSTER_STRATEGY:hn-rule-v1}
+    shadow-strategy: ${AI_RADAR_CLUSTER_SHADOW_STRATEGY:}
   collector:
     arxiv:
       base-url: ${AI_RADAR_ARXIV_BASE_URL:https://export.arxiv.org/api}

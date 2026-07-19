@@ -1,7 +1,8 @@
 package com.airadar.item.service;
 
 import com.airadar.cluster.entity.HotClusterEntity;
-import com.airadar.cluster.service.RuleBasedClusterService;
+import com.airadar.cluster.strategy.ClusterAssignmentOrchestrator;
+import com.airadar.cluster.strategy.ClusterAssignmentResult;
 import com.airadar.crawl.model.CrawlStage;
 import com.airadar.item.entity.HotItemEntity;
 import com.airadar.item.model.NormalizedHotItem;
@@ -26,7 +27,7 @@ public class ItemPipelineService {
     private final HotItemService hotItemService;
     private final SourceSignalAdapterRegistry sourceSignalAdapterRegistry;
     private final SignalSnapshotService signalSnapshotService;
-    private final RuleBasedClusterService clusterService;
+    private final ClusterAssignmentOrchestrator clusterOrchestrator;
     private final ScoringOrchestrator scoringOrchestrator;
 
     public ItemPipelineService(
@@ -34,14 +35,14 @@ public class ItemPipelineService {
             HotItemService hotItemService,
             SourceSignalAdapterRegistry sourceSignalAdapterRegistry,
             SignalSnapshotService signalSnapshotService,
-            RuleBasedClusterService clusterService,
+            ClusterAssignmentOrchestrator clusterOrchestrator,
             ScoringOrchestrator scoringOrchestrator
     ) {
         this.normalizerRegistry = normalizerRegistry;
         this.hotItemService = hotItemService;
         this.sourceSignalAdapterRegistry = sourceSignalAdapterRegistry;
         this.signalSnapshotService = signalSnapshotService;
-        this.clusterService = clusterService;
+        this.clusterOrchestrator = clusterOrchestrator;
         this.scoringOrchestrator = scoringOrchestrator;
     }
 
@@ -74,7 +75,8 @@ public class ItemPipelineService {
 
         HotClusterEntity cluster;
         try {
-            cluster = clusterService.assign(hotItem);
+            ClusterAssignmentResult assignment = clusterOrchestrator.assign(hotItem);
+            cluster = assignment.getCluster();
         } catch (RuntimeException exception) {
             throw new ItemProcessingException(CrawlStage.CLUSTER, exception);
         }

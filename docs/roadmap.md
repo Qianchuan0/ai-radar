@@ -448,3 +448,75 @@
 - No multi-window momentum beyond 24h
 - No `RuleBasedScoringService` code changes (zero V1 behavior change)
 - No Flyway migration (hot_score already supports multiple versions)
+
+## Phase 16A: Minimal Clustering Evaluation Baseline
+
+**Status:** In Progress
+
+### Goals
+
+- establish a minimal, replayable evaluation baseline for clustering before V2 ships
+- freeze a fixed set of "must-merge" and "must-not-merge" fixtures so V1 and V2 can be compared on identical inputs
+- keep this phase focused on fixtures and report output; do not change clustering behavior
+
+### Deliverables
+
+- `ClusterBaselineFixture` covering at least 5 must-merge cases and 5 must-not-merge cases
+- `ClusterEvaluationService` running a `ClusterAssignmentStrategy` against the fixture and emitting precision, recall, false-merge, and false-split metrics
+- `ClusterEvaluationReport` model and JSON output
+- `ClusterEvaluationIntegrationTest` proving the baseline is replayable
+- Phase 16A acceptance script
+- documentation sync: roadmap, decision log
+
+### Scope
+
+**Included in Phase 16A:**
+- Fixed in-memory fixtures (no external dataset)
+- Per-case must-merge / must-not-merge assertions
+- Aggregate metrics: precision, recall, false-merge count, false-split count
+- Strategy-agnostic runner so V1 (`hn-rule-v1`) and V2 (`event-rule-v2`) can both be evaluated
+
+**Explicitly NOT in Phase 16A:**
+- No LLM judges
+- No production dataset ingestion
+- No frontend visualization
+- No changes to V1 clustering code
+
+## Phase 16: Event Cluster V2
+
+**Status:** In Progress
+
+### Goals
+
+- upgrade URL-level merging to event-level clustering V2 so the same event reported by different URLs, sources, and phrasings can enter the same `hot_cluster`
+- avoid wrongly merging events that share an entity but differ in action (release vs update vs security incident)
+- keep clustering deterministic, explainable, and measurable
+
+### Deliverables
+
+- Flyway migration adding `hot_item_feature` and `cluster_match_decision` tables
+- `ItemFeatureExtractor` plus `TitleNormalizer`, `ExternalIdExtractor`, `EntityExtractor`, `KeywordExtractor`, `EventTimeResolver`, `PublisherResolver`, `EventTypeResolver`
+- `ClusterCandidateRetriever` with bounded candidate set (default 72h window, max 50 candidates)
+- layered match rules: Level 1 deterministic identifiers, Level 2 strong entity + org + event type + time, Level 3 weighted similarity
+- `ClusterAssignmentStrategy` interface with `CanonicalUrlClusterStrategy` (`hn-rule-v1`) and `EventRuleClusterStrategy` (`event-rule-v2`)
+- `ClusterAssignmentOrchestrator` wiring V1 as the sole online strategy and V2 as an optional evaluate-only shadow via `ai-radar.cluster.shadow-strategy`
+- `cluster_match_decision` persistence for ACCEPTED, REJECTED, REVIEW_REQUIRED, and NO_CANDIDATE outcomes with `match_reason`
+- primary-item re-selection after V2 membership changes
+- V1/V2 comparison test using Phase 16A fixtures
+- Phase 16 acceptance script
+
+### Scope
+
+**Included in Phase 16:**
+- V2 introduced as a shadow strategy only via `ai-radar.cluster.shadow-strategy=event-rule-v2`; V1 remains the sole online strategy
+- V2 runs evaluate-only and never writes `hot_cluster_item`; every considered candidate lands in `cluster_match_decision` with rule version and reason
+- V1 behavior preserved when no shadow strategy is configured
+- Evaluation report produced by reusing Phase 16A fixtures
+
+**Explicitly NOT in Phase 16:**
+- No promotion of V2 to the online strategy (`ai-radar.cluster.strategy=event-rule-v2` is reserved for Phase 17, when cluster merge/split governance exists)
+- No pgvector or embedding retrieval
+- No LLM as a clustering decision maker
+- No automated cluster merge/split governance (deferred to Phase 17)
+- No deletion of the V1 strategy
+- No full-table candidate scan
