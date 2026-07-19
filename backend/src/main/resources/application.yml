@@ -30,6 +30,13 @@ ai-radar:
   cluster:
     strategy: ${AI_RADAR_CLUSTER_STRATEGY:hn-rule-v1}
     shadow-strategy: ${AI_RADAR_CLUSTER_SHADOW_STRATEGY:}
+    v2-online:
+      enabled: ${AI_RADAR_CLUSTER_V2_ONLINE_ENABLED:false}
+      traffic-percent: ${AI_RADAR_CLUSTER_V2_ONLINE_TRAFFIC_PERCENT:0}
+      allowed-match-levels: ${AI_RADAR_CLUSTER_V2_ONLINE_ALLOWED_LEVELS:L1}
+      l3-min-score: ${AI_RADAR_CLUSTER_V2_ONLINE_L3_MIN_SCORE:0.85}
+      review-required-to-queue: ${AI_RADAR_CLUSTER_V2_ONLINE_REVIEW_TO_QUEUE:true}
+      source-allowlist: ${AI_RADAR_CLUSTER_V2_ONLINE_SOURCE_ALLOWLIST:}
   collector:
     arxiv:
       base-url: ${AI_RADAR_ARXIV_BASE_URL:https://export.arxiv.org/api}

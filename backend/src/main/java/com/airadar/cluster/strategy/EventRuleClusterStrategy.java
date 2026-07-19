@@ -146,6 +146,69 @@ public class EventRuleClusterStrategy implements ClusterAssignmentStrategy {
         return persisted;
     }
 
+    /**
+     * Phase 17C online evaluation: runs the full V2 pipeline (extract
+     * features, retrieve candidates, layered match, persist decisions) and
+     * picks the best candidate outcome, but does NOT write any
+     * {@code hot_cluster} or {@code hot_cluster_item} row.
+     *
+     * <p>Unlike the shadow {@link #evaluate}, this variant also picks the
+     * best candidate so the caller ({@code V2OnlineAssignmentService}) can
+     * decide whether to relocate the item into the candidate cluster via
+     * {@code MoveItemService}. Candidates whose feature row belongs to the
+     * calling item itself are skipped to avoid self-matches; the
+     * {@link ClusterCandidateRetriever} default {@code excludeItemId=-1}
+     * makes self-matches possible when the item already has a persisted
+     * feature row.
+     *
+     * @return the persisted decisions paired with the best candidate
+     *         outcome (both {@code null} when no candidate had a usable
+     *         feature row, or when the candidate set was empty)
+     */
+    public V2OnlineEvaluation evaluateForOnline(HotItemEntity item) {
+        ItemFeature feature = featureExtractor.extractAndPersist(item);
+        List<CandidateCluster> candidates = retriever.retrieve(feature);
+        if (candidates.isEmpty()) {
+            ClusterMatchDecisionEntity entity = new ClusterMatchDecisionEntity();
+            entity.setHotItemId(item.getId());
+            entity.setDecision(AssignmentDecision.NO_CANDIDATE.name());
+            entity.setMatchScore(BigDecimal.ONE);
+            entity.setMatchMethod("NO_CANDIDATE");
+            entity.setMatchReason(simpleReason("NO_CANDIDATE", "online: no candidates retrieved"));
+            entity.setRuleVersion(RULE_VERSION);
+            entity.setDecidedAt(Instant.now());
+            decisionMapper.insert(entity);
+            return new V2OnlineEvaluation(List.of(entity), null, null);
+        }
+
+        Scored best = null;
+        List<ClusterMatchDecisionEntity> persisted = new ArrayList<>(candidates.size());
+        for (CandidateCluster candidate : candidates) {
+            if (candidate.getHotItemId() != null && candidate.getHotItemId().equals(item.getId())) {
+                // Self-match (the retriever does not exclude the calling item
+                // when its own feature row already exists). Skip so the
+                // orchestrator never tries to move an item into its own
+                // singleton cluster.
+                continue;
+            }
+            ItemFeature candidateFeature = loadCandidateFeature(candidate.getHotItemId());
+            if (candidateFeature == null) {
+                continue;
+            }
+            MatchOutcome outcome = matcher.match(feature, candidateFeature);
+            ClusterMatchDecisionEntity entity = persistDecision(item.getId(), candidate, outcome);
+            persisted.add(entity);
+            Scored scored = new Scored(candidate, outcome);
+            if (best == null || rankedHigher(scored, best)) {
+                best = scored;
+            }
+        }
+        if (best == null) {
+            return new V2OnlineEvaluation(persisted, null, null);
+        }
+        return new V2OnlineEvaluation(persisted, best.outcome, best.candidate);
+    }
+
     @Override
     public ClusterAssignmentResult assign(HotItemEntity item) {
         ItemFeature feature = featureExtractor.extractAndPersist(item);
@@ -359,7 +422,7 @@ public class EventRuleClusterStrategy implements ClusterAssignmentStrategy {
         clusterMapper.updateById(cluster);
     }
 
-    private void persistDecision(Long hotItemId, CandidateCluster candidate, MatchOutcome outcome) {
+    private ClusterMatchDecisionEntity persistDecision(Long hotItemId, CandidateCluster candidate, MatchOutcome outcome) {
         ClusterMatchDecisionEntity entity = new ClusterMatchDecisionEntity();
         entity.setHotItemId(hotItemId);
         entity.setCandidateClusterId(candidate.getClusterId());
@@ -370,6 +433,7 @@ public class EventRuleClusterStrategy implements ClusterAssignmentStrategy {
         entity.setRuleVersion(RULE_VERSION);
         entity.setDecidedAt(Instant.now());
         decisionMapper.insert(entity);
+        return entity;
     }
 
     private JsonNode simpleReason(String method, String detail) {

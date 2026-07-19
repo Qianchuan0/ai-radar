@@ -227,8 +227,14 @@ public class ClusterReviewService {
      * Inserts an OPEN {@code cluster_review_task} row for every REVIEW_REQUIRED
      * decision that does not yet have one. Idempotent thanks to the unique
      * index on {@code cluster_match_decision_id}.
+     *
+     * <p>Phase 17C V2 online writes call this proactively after each V2
+     * evaluation so REVIEW_REQUIRED decisions surface in the review queue
+     * without waiting for the next {@code GET /api/v1/cluster-review/tasks}
+     * poll. The method is safe to call repeatedly because of the unique
+     * index — concurrent materialization races collapse into a no-op.
      */
-    private void materializeOpenTasks() {
+    public void materializeOpenTasks() {
         List<ClusterMatchDecisionEntity> reviewRequired = decisionMapper.selectList(
                 new LambdaQueryWrapper<ClusterMatchDecisionEntity>()
                         .eq(ClusterMatchDecisionEntity::getDecision, REVIEW_REQUIRED)

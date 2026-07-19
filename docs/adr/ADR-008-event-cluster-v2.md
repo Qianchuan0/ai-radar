@@ -141,3 +141,42 @@ interface, so the migration is incremental and reversible.
 - Revisit LLM-assisted entity resolution once the deterministic
   dictionary's coverage becomes the bottleneck (measured by
   feature-extraction coverage metrics, not by intuition).
+
+## Phase 17C Gradual Online Adoption
+
+Phase 17C lifts V2 out of evaluate-only shadow into a gated, staged
+online writer. The architectural commitment is unchanged — V1
+(`hn-rule-v1`) stays authoritative, and `ai-radar.cluster.strategy`
+remains pinned to `hn-rule-v1`. The new path is additive:
+
+- V1 always creates the initial singleton cluster for every crawled
+  item, exactly as before.
+- When `ai-radar.cluster.v2-online.enabled=true` (default `false`)
+  plus a non-zero `traffic-percent` plus an explicit
+  `allowed-match-levels` set, `ClusterAssignmentOrchestrator` dispatches
+  to `V2OnlineAssignmentService` for items that clear the deterministic
+  id-hash traffic gate and (optional) source allowlist.
+- `V2OnlineAssignmentService` runs `EventRuleClusterStrategy.evaluateForOnline`
+  (full V2 pipeline, picks best candidate, persists every decision,
+  excludes self-match), applies the level + L3-min-score gate, and —
+  only when ACCEPTED clears every gate — calls `MoveItemService.move`
+  with `OperatorType.SYSTEM` to relocate the item from its V1 singleton
+  into the V2 target cluster. Every successful relocation writes a
+  `cluster_membership_history` row through the same governance path
+  manual ops use.
+- V2 online runs inside a `Propagation.NESTED` savepoint so any V2-side
+  failure rolls back only the V2 work. V1's singleton is intact and the
+  crawl loop continues.
+- REVIEW_REQUIRED decisions never write membership. The V2 online path
+  proactively calls `ClusterReviewService.materializeOpenTasks()` so
+  grey-zone matches surface in the review queue without waiting for a
+  poll.
+- `GET /api/v1/cluster-strategy/status` returns the live configuration
+  and a derived rollout stage (`V1_ONLY`, `SHADOW_ONLY`, `STAGE_2_L1`,
+  `STAGE_3_L2`, `STAGE_4_L3`) so operators can confirm which path the
+  crawl pipeline is taking.
+
+Rollback is one property flip: set `AI_RADAR_CLUSTER_V2_ONLINE_ENABLED=false`
+(or drop `traffic-percent` to 0 and re-validate) and the orchestrator
+falls back to the V1-only / shadow-only path that has been in production
+since Phase 16.

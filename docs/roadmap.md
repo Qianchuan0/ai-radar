@@ -562,3 +562,65 @@
 - No frontend governance workbench (debug-only API access)
 - No workflow engine or multi-approver review
 - No removal of the V1 clustering strategy
+
+## Phase 17C: Event Cluster V2 Gradual Online Adoption
+
+**Status:** In Progress
+
+### Goals
+
+- let V2 take ownership of real `hot_cluster_item` writes behind a strict,
+  reversible configuration
+- support staged rollout by match level (L1 → L2 → L3) and confidence
+  (`l3-min-score`) so operators can grow trust incrementally
+- keep V1 as the always-on baseline; flip one property to roll back
+- route every V2 online write through `MoveItemService` so the same
+  governance audit trail covers manual and automated moves
+- materialize `REVIEW_REQUIRED` decisions into the Phase 17B review queue
+  proactively, without waiting for an operator to poll
+
+### Deliverables
+
+- `ClusterStrategyProperties.V2Online` nested config (`enabled`,
+  `traffic-percent`, `allowed-match-levels`, `l3-min-score`,
+  `review-required-to-queue`, `source-allowlist`) with startup validation
+  that rejects unsafe rollouts
+- `ClusterAssignmentOrchestrator` dispatch paths: V1-only /
+  V1 + shadow / V1 + V2 online (V1 always creates the singleton)
+- `V2OnlineAssignmentService` running inside a nested savepoint
+  (`Propagation.NESTED`) so a V2-side failure rolls back only the V2 work
+- `EventRuleClusterStrategy.evaluateForOnline` — full V2 pipeline, picks
+  best candidate, persists decisions, excludes self-match, writes no
+  membership
+- V2 online writes go through `MoveItemService.move` with
+  `OperatorType.SYSTEM` so `cluster_membership_history` covers every move
+- `ClusterReviewService.materializeOpenTasks` is public so V2 online can
+  surface `REVIEW_REQUIRED` decisions immediately
+- `ClusterStrategyController` `GET /api/v1/cluster-strategy/status` returns
+  online strategy, shadow strategy, V2 online config, and the effective
+  rollout stage (`V1_ONLY`, `SHADOW_ONLY`, `STAGE_2_L1`, `STAGE_3_L2`,
+  `STAGE_4_L3`)
+- `ClusterStrategyV2OnlineIntegrationTest` covers V1-only, shadow-only,
+  V2 online disabled, L1 ACCEPTED move, level-filter block,
+  REVIEW_REQUIRED materialization, status endpoint, and config validation
+- `scripts/accept-phase-17c.ps1`
+- documentation sync: roadmap, decision log, ADR
+
+### Scope
+
+**Included in Phase 17C:**
+- V2 writes real `hot_cluster_item` rows when every gate clears
+- Allowed levels gate L1 / L2 / L3 independently; L3 requires
+  `l3-min-score` (default 0.85)
+- Traffic percent gates items deterministically by id hash
+- Source allowlist (optional) restricts V2 online to a subset of sources
+- REVIEW_REQUIRED decisions proactively enter the review queue
+- V1 singleton always created; V2 only relocates when accepted
+- V2 online failures fall back to V1 result without losing the crawl
+
+**Explicitly NOT in Phase 17C:**
+- No deletion of the V1 strategy (V1 still authoritative; V2 only relocates)
+- No LLM or embedding match layers (V2 stays deterministic)
+- No full-table historical re-cluster
+- No automatic acceptance of REVIEW_REQUIRED decisions
+- No promotion of `strategy=event-rule-v2` (still rejected at startup)
