@@ -1,30 +1,32 @@
 package com.airadar.scoring.calculator;
 
+import com.airadar.cluster.model.ClusterTrend;
 import com.airadar.scoring.strategy.ScoringContext;
 import com.airadar.scoring.strategy.model.ScoreComponent;
 import com.airadar.signal.model.GrowthConfidence;
-import com.airadar.signal.model.GrowthMetrics;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Computes the momentum dimension from the primary item's 24h growth trend.
+ * Computes the momentum dimension from the cluster-level 24h trend.
  *
  * <p>Momentum is the highest-weighted V2 dimension (0.25) because it captures
  * current growth velocity rather than cumulative scale. A brand-new project with
  * 600 stars/day should outscore a 100k-star project that is flat.
  *
- * <p>Confidence attenuation prevents unreliable growth data from inflating the
- * score: when no historical snapshot exists or metrics look anomalous, the
- * momentum contribution is heavily discounted.
+ * <p><b>Phase 18B refactor:</b> reads {@link ClusterTrend#momentumScore()}
+ * (aggregated across all active items with discovery-source dedup) instead of
+ * {@code context.primaryGrowth()}. Confidence attenuation still applies so
+ * unreliable trend data cannot inflate the score.
  */
 @Component
 public class MomentumScoreCalculator implements ScoreCalculator {
 
     public static final String NAME = "momentum";
     public static final double WEIGHT = 0.25;
+    private static final double NO_TREND_BASELINE = 10.0;
 
     @Override
     public String name() {
@@ -33,27 +35,23 @@ public class MomentumScoreCalculator implements ScoreCalculator {
 
     @Override
     public ScoreComponent compute(ScoringContext context) {
-        GrowthMetrics growth = context.primaryGrowth();
         List<String> reasons = new ArrayList<>();
+        ClusterTrend trend = context.clusterTrend();
 
-        if (growth == null) {
-            reasons.add("no_growth_data_for_primary_item");
-            return new ScoreComponent(NAME, 10.0, WEIGHT, reasons);
+        if (trend == null || trend.momentumScore() == null) {
+            reasons.add(trend == null ? "no_cluster_trend" : "momentum_not_computed");
+            return new ScoreComponent(NAME, NO_TREND_BASELINE, WEIGHT, reasons);
         }
 
-        Double rawMomentum = growth.momentumScore();
-        if (rawMomentum == null) {
-            reasons.add("momentum_not_computed");
-            return new ScoreComponent(NAME, 10.0, WEIGHT, reasons);
-        }
+        double raw = clamp(trend.momentumScore(), 0.0, 100.0);
+        GrowthConfidence confidence = trend.confidence();
+        double confidenceFactor = confidenceFactor(confidence);
+        double score = clamp(raw * confidenceFactor, 0.0, 100.0);
 
-        double clamped = clamp(rawMomentum, 0.0, 100.0);
-        double confidenceFactor = confidenceFactor(growth.confidence());
-        double score = clamp(clamped * confidenceFactor, 0.0, 100.0);
-
-        reasons.add("primary_item=" + growth.hotItemId());
-        reasons.add("raw_momentum=" + format(rawMomentum));
-        reasons.add("confidence=" + growth.confidence() + "*factor=" + format(confidenceFactor));
+        reasons.add("window=" + trend.window());
+        reasons.add("contributing_items=" + (trend.contributingItems() == null ? 0 : trend.contributingItems().size()));
+        reasons.add("raw_momentum=" + format(raw));
+        reasons.add("confidence=" + confidence + "*factor=" + format(confidenceFactor));
         return new ScoreComponent(NAME, score, WEIGHT, reasons);
     }
 

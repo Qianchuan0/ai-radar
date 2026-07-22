@@ -1,10 +1,13 @@
 package com.airadar.signal.adapter;
 
 import com.airadar.item.entity.HotItemEntity;
+import com.airadar.signal.model.MetricSemantics;
 import com.airadar.signal.model.NormalizedSignal;
 import com.airadar.signal.model.SourceRole;
 import com.airadar.source.model.SourceType;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 /**
  * Signal adapter for HuggingFace models.
@@ -24,9 +27,22 @@ public class HuggingFaceSignalAdapter implements SourceSignalAdapter {
     private static final int MAX_DOWNLOADS = 50000;
     private static final int MAX_LIKES = 500;
 
+    private static final Map<String, MetricSemantics> METRIC_SEMANTICS = Map.of(
+        // Downloads are strictly cumulative on the platform; a drop is a pipeline anomaly.
+        "downloads", MetricSemantics.MONOTONIC_CUMULATIVE,
+        // Likes rarely decrease but can be withdrawn; keep monotonic so an observed
+        // drop is surfaced as an anomaly rather than silently swallowed.
+        "likes", MetricSemantics.MONOTONIC_CUMULATIVE
+    );
+
     @Override
     public SourceType supportedType() {
         return SourceType.HUGGING_FACE;
+    }
+
+    @Override
+    public Map<String, MetricSemantics> metricSemantics() {
+        return METRIC_SEMANTICS;
     }
 
     @Override

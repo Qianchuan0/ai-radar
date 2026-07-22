@@ -17,6 +17,7 @@ public interface HotClusterMapper extends BaseMapper<HotClusterEntity> {
             @Param("from") Instant from,
             @Param("to") Instant to,
             @Param("sort") String sort,
+            @Param("scoringVersion") String scoringVersion,
             @Param("limit") int limit,
             @Param("offset") long offset
     );

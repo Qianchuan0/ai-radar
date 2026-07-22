@@ -218,7 +218,7 @@ Special handling:
 15. Sogou Search as the first Chinese platform source via Tencent Cloud Web Search API, with manual TC3-HMAC-SHA256 signature
 16. Phase 12B-1 structured JSON/API sources: Weibo Hot Search, Hacker News Algolia Search, and Twitter/X via `twitterapi.io`
 17. Phase 12B-2 HTML search sources: Bing and DuckDuckGo with lightweight jsoup parsing, block detection, and explicit failure handling
-18. Phase 17B cluster governance backend: manual merge / split / move / recluster services plus a review queue for Phase 16 REVIEW_REQUIRED decisions, all writes audited via `cluster_membership_history`. V2 remains shadow-only; governance is the prerequisite for any future V2 online promotion.
+18. Phase 17B / 17C cluster governance and gradual V2 online adoption: manual merge / split / move / recluster services plus a review queue for Phase 16 `REVIEW_REQUIRED` decisions, all writes audited via `cluster_membership_history`. V1 remains authoritative, while V2 can be promoted from shadow to gated online relocation through `ai-radar.cluster.v2-online.*` rollout controls.
 
 ## Phase 1 Minimal Closed Loop
 

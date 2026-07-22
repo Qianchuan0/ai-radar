@@ -1,29 +1,28 @@
 package com.airadar.scoring.calculator;
 
-import com.airadar.item.entity.HotItemEntity;
 import com.airadar.scoring.strategy.ScoringContext;
 import com.airadar.scoring.strategy.model.ScoreComponent;
 import com.airadar.signal.model.NormalizedSignal;
+import com.airadar.signal.model.SourceRole;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
- * Computes the adoption dimension from normalized adoption signals
+ * Computes the adoption dimension from ADOPTION source role signals
  * (GitHub stars, HuggingFace downloads, etc.).
  *
- * <p>Uses the primary item's adoption as the base, with a small cluster boost
- * from other members' average adoption. This rewards clusters that show broad
- * adoption across multiple items without letting a single low-adoption member
- * drag the score down.
+ * <p><b>Phase 18B refactor:</b> reads {@link SourceRole#ADOPTION} signals
+ * across the entire cluster rather than only the primary item. This ensures
+ * events with multiple adoption signals (e.g. a GitHub repo + a Hugging Face
+ * model) are not undercounted when neither happens to be the primary item.
  */
 @Component
 public class AdoptionScoreCalculator implements ScoreCalculator {
 
     public static final String NAME = "adoption";
     public static final double WEIGHT = 0.15;
-    private static final double CLUSTER_BOOST_FACTOR = 0.2;
 
     @Override
     public String name() {
@@ -33,43 +32,32 @@ public class AdoptionScoreCalculator implements ScoreCalculator {
     @Override
     public ScoreComponent compute(ScoringContext context) {
         List<String> reasons = new ArrayList<>();
-        NormalizedSignal primarySignal = context.primarySignal();
+        List<NormalizedSignal> adoptionSignals = context.signalsForRole(SourceRole.ADOPTION);
 
-        if (primarySignal == null) {
-            reasons.add("no_signal_for_primary_item");
+        if (adoptionSignals.isEmpty()) {
+            reasons.add("no_adoption_source");
             return new ScoreComponent(NAME, 0.0, WEIGHT, reasons);
         }
 
-        double primaryAdoption = primarySignal.adoption();
-        double clusterBoost = clusterAdoptionBoost(context);
-        double score = clamp(primaryAdoption + clusterBoost, 0.0, 100.0);
-
-        reasons.add("primary_adoption=" + format(primaryAdoption));
-        reasons.add("cluster_boost=" + format(clusterBoost));
-        return new ScoreComponent(NAME, score, WEIGHT, reasons);
-    }
-
-    private double clusterAdoptionBoost(ScoringContext context) {
-        HotItemEntity primary = context.primaryItem();
-        if (primary == null) {
-            return 0.0;
-        }
+        double max = 0.0;
         double sum = 0.0;
-        int count = 0;
-        for (HotItemEntity item : context.activeItems()) {
-            if (item.getId().equals(primary.getId())) {
-                continue;
-            }
-            NormalizedSignal signal = context.signals().get(item.getId());
-            if (signal != null) {
-                sum += signal.adoption();
-                count++;
+        for (NormalizedSignal signal : adoptionSignals) {
+            double value = signal.adoption();
+            sum += value;
+            if (value > max) {
+                max = value;
             }
         }
-        if (count == 0) {
-            return 0.0;
-        }
-        return (sum / count) * CLUSTER_BOOST_FACTOR;
+        // Use max-of-cluster as the base (one strong adopter is enough to mark the
+        // event as significant) and add a small boost from the average of the rest
+        // so a cluster with multiple adoption signals still ranks higher.
+        double average = sum / adoptionSignals.size();
+        double score = clamp(max + (average * 0.15), 0.0, 100.0);
+
+        reasons.add("adoption_sources=" + adoptionSignals.size());
+        reasons.add("max_adoption=" + format(max));
+        reasons.add("avg_adoption=" + format(average));
+        return new ScoreComponent(NAME, score, WEIGHT, reasons);
     }
 
     private double clamp(double value, double min, double max) {

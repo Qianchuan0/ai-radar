@@ -1,19 +1,34 @@
 package com.airadar.signal.adapter;
 
 import com.airadar.item.entity.HotItemEntity;
+import com.airadar.signal.model.MetricSemantics;
 import com.airadar.signal.model.NormalizedSignal;
 import com.airadar.signal.model.SourceRole;
 import com.airadar.source.model.SourceType;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 @Component
 public class WeiboHotSearchSignalAdapter implements SourceSignalAdapter {
 
     private static final int MAX_HOT = 1_000_000;
 
+    private static final Map<String, MetricSemantics> METRIC_SEMANTICS = Map.of(
+        // Weibo raw_hot is a volatile buzz score that rises and falls with attention.
+        "points", MetricSemantics.VOLATILE_SOCIAL,
+        // Hot-search rank is recomputed every snapshot; movement is expected.
+        "rank", MetricSemantics.RANK_LIKE_REVERSIBLE
+    );
+
     @Override
     public SourceType supportedType() {
         return SourceType.WEIBO_HOT_SEARCH;
+    }
+
+    @Override
+    public Map<String, MetricSemantics> metricSemantics() {
+        return METRIC_SEMANTICS;
     }
 
     @Override

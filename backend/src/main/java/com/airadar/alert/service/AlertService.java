@@ -13,6 +13,7 @@ import com.airadar.cluster.vo.HotClusterDetailVO;
 import com.airadar.common.api.PageResponse;
 import com.airadar.common.exception.BusinessException;
 import com.airadar.common.exception.ErrorCode;
+import com.airadar.scoring.strategy.ScoringStrategyProperties;
 import com.airadar.subscription.entity.SubscriptionRuleEntity;
 import com.airadar.subscription.service.SubscriptionService;
 import com.airadar.subscription.vo.SubscriptionRuleVO;
@@ -46,6 +47,7 @@ public class AlertService {
     private final SubscriptionService subscriptionService;
     private final HotClusterMapper hotClusterMapper;
     private final HotClusterQueryService hotClusterQueryService;
+    private final ScoringStrategyProperties scoringProperties;
     private final ObjectMapper objectMapper;
 
     public AlertService(
@@ -53,12 +55,14 @@ public class AlertService {
             SubscriptionService subscriptionService,
             HotClusterMapper hotClusterMapper,
             HotClusterQueryService hotClusterQueryService,
+            ScoringStrategyProperties scoringProperties,
             ObjectMapper objectMapper
     ) {
         this.alertRecordMapper = alertRecordMapper;
         this.subscriptionService = subscriptionService;
         this.hotClusterMapper = hotClusterMapper;
         this.hotClusterQueryService = hotClusterQueryService;
+        this.scoringProperties = scoringProperties;
         this.objectMapper = objectMapper;
     }
 
@@ -81,6 +85,7 @@ public class AlertService {
                     null,
                     null,
                     HotClusterSort.LATEST.name(),
+                    scoringProperties.effectiveOnlineVersion(),
                     SCAN_PAGE_SIZE,
                     offset
             );

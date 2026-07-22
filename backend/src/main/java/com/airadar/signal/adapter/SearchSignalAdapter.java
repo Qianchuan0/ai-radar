@@ -1,10 +1,13 @@
 package com.airadar.signal.adapter;
 
 import com.airadar.item.entity.HotItemEntity;
+import com.airadar.signal.model.MetricSemantics;
 import com.airadar.signal.model.NormalizedSignal;
 import com.airadar.signal.model.SourceRole;
 import com.airadar.source.model.SourceType;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 /**
  * Signal adapter for web search results.
@@ -26,12 +29,26 @@ public class SearchSignalAdapter implements SourceSignalAdapter {
 
     private static final int MAX_RANK = 20;
 
+    private static final Map<String, MetricSemantics> METRIC_SEMANTICS = Map.of(
+        // Search result rank is recomputed every crawl and is expected to move.
+        "rank", MetricSemantics.RANK_LIKE_REVERSIBLE,
+        // totalCount is the size of the search result set, informational only.
+        "totalCount", MetricSemantics.RELEVANCE_SCORE,
+        // Sogou/Bing may return a provider score; treat it as a relevance signal.
+        "score", MetricSemantics.RELEVANCE_SCORE
+    );
+
     @Override
     public SourceType supportedType() {
         // This adapter supports both search sources
         // The registry pattern requires a single supportedType,
         // so we'll create separate instances for each
         return SourceType.BING_SEARCH;
+    }
+
+    @Override
+    public Map<String, MetricSemantics> metricSemantics() {
+        return METRIC_SEMANTICS;
     }
 
     @Override

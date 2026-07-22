@@ -1,27 +1,28 @@
 package com.airadar.scoring.calculator;
 
-import com.airadar.item.entity.HotItemEntity;
 import com.airadar.scoring.strategy.ScoringContext;
 import com.airadar.scoring.strategy.model.ScoreComponent;
 import com.airadar.signal.model.NormalizedSignal;
+import com.airadar.signal.model.SourceRole;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Computes the discussion dimension from normalized community discussion signals
- * (HackerNews comments, social engagement, etc.).
+ * Computes the discussion dimension from COMMUNITY source role signals
+ * (HackerNews, Twitter, Weibo Hot Search).
  *
- * <p>Mirrors {@link AdoptionScoreCalculator}: primary item discussion as the base
- * plus a cluster boost from other members.
+ * <p><b>Phase 18B refactor:</b> reads {@link SourceRole#COMMUNITY} signals
+ * across the entire cluster rather than only the primary item. This avoids
+ * undercounting discussion when a HN story and a Weibo hot search cover the
+ * same event from different communities.
  */
 @Component
 public class DiscussionScoreCalculator implements ScoreCalculator {
 
     public static final String NAME = "discussion";
     public static final double WEIGHT = 0.10;
-    private static final double CLUSTER_BOOST_FACTOR = 0.2;
 
     @Override
     public String name() {
@@ -31,43 +32,29 @@ public class DiscussionScoreCalculator implements ScoreCalculator {
     @Override
     public ScoreComponent compute(ScoringContext context) {
         List<String> reasons = new ArrayList<>();
-        NormalizedSignal primarySignal = context.primarySignal();
+        List<NormalizedSignal> communitySignals = context.signalsForRole(SourceRole.COMMUNITY);
 
-        if (primarySignal == null) {
-            reasons.add("no_signal_for_primary_item");
+        if (communitySignals.isEmpty()) {
+            reasons.add("no_community_source");
             return new ScoreComponent(NAME, 0.0, WEIGHT, reasons);
         }
 
-        double primaryDiscussion = primarySignal.discussion();
-        double clusterBoost = clusterDiscussionBoost(context);
-        double score = clamp(primaryDiscussion + clusterBoost, 0.0, 100.0);
-
-        reasons.add("primary_discussion=" + format(primaryDiscussion));
-        reasons.add("cluster_boost=" + format(clusterBoost));
-        return new ScoreComponent(NAME, score, WEIGHT, reasons);
-    }
-
-    private double clusterDiscussionBoost(ScoringContext context) {
-        HotItemEntity primary = context.primaryItem();
-        if (primary == null) {
-            return 0.0;
-        }
+        double max = 0.0;
         double sum = 0.0;
-        int count = 0;
-        for (HotItemEntity item : context.activeItems()) {
-            if (item.getId().equals(primary.getId())) {
-                continue;
-            }
-            NormalizedSignal signal = context.signals().get(item.getId());
-            if (signal != null) {
-                sum += signal.discussion();
-                count++;
+        for (NormalizedSignal signal : communitySignals) {
+            double value = signal.discussion();
+            sum += value;
+            if (value > max) {
+                max = value;
             }
         }
-        if (count == 0) {
-            return 0.0;
-        }
-        return (sum / count) * CLUSTER_BOOST_FACTOR;
+        double average = sum / communitySignals.size();
+        double score = clamp(max + (average * 0.15), 0.0, 100.0);
+
+        reasons.add("community_sources=" + communitySignals.size());
+        reasons.add("max_discussion=" + format(max));
+        reasons.add("avg_discussion=" + format(average));
+        return new ScoreComponent(NAME, score, WEIGHT, reasons);
     }
 
     private double clamp(double value, double min, double max) {

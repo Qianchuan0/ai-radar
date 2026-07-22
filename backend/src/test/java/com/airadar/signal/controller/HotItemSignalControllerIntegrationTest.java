@@ -120,6 +120,42 @@ class HotItemSignalControllerIntegrationTest {
             .andExpect(jsonPath("$.data.confidence").value("HIGH"));
     }
 
+    @Test
+    void shouldReturnMultiWindowTrendWithRawMetricDeltas() throws Exception {
+        Instant base = Instant.parse("2026-07-17T00:00:00Z");
+        Long crawlTaskId = createSucceededCrawlTask(base);
+        // GitHub hot item with cumulative metrics so the Phase 18A trend layer
+        // can produce source-aware raw deltas.
+        RawItemEntity currentRawItem = rawItem(crawlTaskId, "gh-1", base);
+        rawItemMapper.insert(currentRawItem);
+        HotItemEntity hotItem = githubHotItem(currentRawItem.getId(), "gh-1", base);
+        hotItemMapper.insert(hotItem);
+
+        signalSnapshotMapper.insert(githubSnapshot(
+            hotItem.getId(),
+            currentRawItem.getId(),
+            base.minusSeconds(6 * 3600),
+            rawGithubMetrics(3_800, 300),
+            githubSignal(60, 40, 55)
+        ));
+        signalSnapshotMapper.insert(githubSnapshot(
+            hotItem.getId(),
+            currentRawItem.getId() + 1,
+            base,
+            rawGithubMetrics(4_200, 310),
+            githubSignal(80, 50, 70)
+        ));
+
+        mockMvc.perform(get("/api/v1/hot-items/{id}/trends", hotItem.getId()).param("window", "6h"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.window").value("6h"))
+            .andExpect(jsonPath("$.data.attentionDelta").value(20.0))
+            .andExpect(jsonPath("$.data.confidence").value("HIGH"))
+            .andExpect(jsonPath("$.data.rawMetricDeltas[*].metric").value(
+                org.hamcrest.Matchers.hasItems("stargazersCount", "forksCount")))
+            .andExpect(jsonPath("$.data.rawMetricDeltas[?(@.metric == 'stargazersCount')].delta").value(400.0));
+    }
+
     private Long createSucceededCrawlTask(Instant now) {
         SourceConfigEntity source = new SourceConfigEntity();
         source.setSourceCode("phase14-controller-test");
@@ -209,5 +245,61 @@ class HotItemSignalControllerIntegrationTest {
             node.put("rank", rank);
         }
         return node;
+    }
+
+    private HotItemEntity githubHotItem(Long rawItemId, String externalId, Instant seenAt) {
+        HotItemEntity entity = new HotItemEntity();
+        entity.setLatestRawItemId(rawItemId);
+        entity.setSourceType(SourceType.GITHUB);
+        entity.setExternalId(externalId);
+        entity.setItemType("REPOSITORY");
+        entity.setTitle("GitHub Repo " + externalId);
+        entity.setSummary("GitHub Repo " + externalId);
+        entity.setSourceUrl("https://github.com/example/" + externalId);
+        entity.setAuthor("example");
+        entity.setTags(objectMapper.createArrayNode().add("ai"));
+        entity.setMetrics(rawGithubMetrics(4_200, 310));
+        entity.setContentHash((externalId + "-hot").repeat(16).substring(0, 64));
+        entity.setPublishedAt(seenAt.minusSeconds(3600));
+        entity.setFirstSeenAt(seenAt.minusSeconds(24 * 3600));
+        entity.setLastSeenAt(seenAt);
+        entity.setCreatedAt(seenAt);
+        entity.setUpdatedAt(seenAt);
+        return entity;
+    }
+
+    private ObjectNode rawGithubMetrics(int stars, int forks) {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("stargazersCount", stars);
+        node.put("forksCount", forks);
+        node.put("watchersCount", 50);
+        node.put("openIssuesCount", 20);
+        return node;
+    }
+
+    private ObjectNode githubSignal(double attention, double discussion, double adoption) {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("attention", attention);
+        node.put("discussion", discussion);
+        node.put("adoption", adoption);
+        node.put("authority", 0.0);
+        node.put("relevance", 0.0);
+        return node;
+    }
+
+    private SignalSnapshotEntity githubSnapshot(
+        Long hotItemId, Long rawItemId, Instant observedAt,
+        ObjectNode rawMetrics, ObjectNode normalizedSignal
+    ) {
+        SignalSnapshotEntity entity = new SignalSnapshotEntity();
+        entity.setHotItemId(hotItemId);
+        entity.setRawItemId(rawItemId);
+        entity.setSourceType(SourceType.GITHUB);
+        entity.setSourceRole(com.airadar.signal.model.SourceRole.ADOPTION);
+        entity.setObservedAt(observedAt);
+        entity.setRawMetrics(rawMetrics);
+        entity.setNormalizedSignal(normalizedSignal);
+        entity.setCreatedAt(observedAt);
+        return entity;
     }
 }

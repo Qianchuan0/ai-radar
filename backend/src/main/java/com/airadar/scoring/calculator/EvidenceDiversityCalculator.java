@@ -1,7 +1,6 @@
 package com.airadar.scoring.calculator;
 
 import com.airadar.cluster.support.UrlCanonicalizer;
-import com.airadar.item.entity.HotItemEntity;
 import com.airadar.scoring.strategy.ScoringContext;
 import com.airadar.scoring.strategy.model.ScoreComponent;
 import com.airadar.signal.model.NormalizedSignal;
@@ -21,6 +20,13 @@ import java.util.Set;
  * DuckDuckGo, Sogou) point at the same canonical URL, they count as a single
  * DISCOVERY evidence rather than three independent sources. Non-search roles
  * contribute one evidence entry each.
+ *
+ * <p><b>Phase 18B refactor:</b> uses the pre-computed
+ * {@link ScoringContext#dedupedDiscoveryUrls()} set built by
+ * {@code CrossSourceScoreV2Strategy.buildContext}, so evidence-diversity and
+ * trend deduplication share the same canonicalization source. The
+ * {@link UrlCanonicalizer} dependency is kept only so the calculator can be
+ * constructed in isolation by existing unit tests.
  */
 @Component
 public class EvidenceDiversityCalculator implements ScoreCalculator {
@@ -44,29 +50,20 @@ public class EvidenceDiversityCalculator implements ScoreCalculator {
     public ScoreComponent compute(ScoringContext context) {
         List<String> reasons = new ArrayList<>();
         Set<SourceRole> distinctRoles = new HashSet<>();
-        Set<String> discoveryUrls = new HashSet<>();
 
-        for (HotItemEntity item : context.activeItems()) {
-            NormalizedSignal signal = context.signals().get(item.getId());
-            if (signal == null) {
-                continue;
-            }
+        for (NormalizedSignal signal : context.signals().values()) {
             SourceRole role = signal.sourceRole();
-            if (role == SourceRole.DISCOVERY) {
-                String canonical = urlCanonicalizer.canonicalize(item.getSourceUrl());
-                if (canonical != null && !canonical.isBlank()) {
-                    discoveryUrls.add(canonical);
-                }
-            } else if (role != null) {
+            if (role != null && role != SourceRole.DISCOVERY) {
                 distinctRoles.add(role);
             }
         }
 
-        if (!discoveryUrls.isEmpty()) {
+        Set<String> discoveryUrls = context.dedupedDiscoveryUrls();
+        if (discoveryUrls != null && !discoveryUrls.isEmpty()) {
             distinctRoles.add(SourceRole.DISCOVERY);
         }
 
-        int dedupedSearchSources = discoveryUrls.size();
+        int dedupedSearchSources = discoveryUrls == null ? 0 : discoveryUrls.size();
         double score = Math.min(100.0, distinctRoles.size() * SCORE_PER_ROLE);
 
         reasons.add("distinct_roles=" + distinctRoles);

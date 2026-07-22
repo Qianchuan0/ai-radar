@@ -1,10 +1,13 @@
 package com.airadar.signal.adapter;
 
 import com.airadar.item.entity.HotItemEntity;
+import com.airadar.signal.model.MetricSemantics;
 import com.airadar.signal.model.NormalizedSignal;
 import com.airadar.signal.model.SourceRole;
 import com.airadar.source.model.SourceType;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 /**
  * Signal adapter for HackerNews.
@@ -25,9 +28,19 @@ public class HackerNewsSignalAdapter implements SourceSignalAdapter {
     private static final int MAX_POINTS = 500;
     private static final int MAX_COMMENTS = 200;
 
+    private static final Map<String, MetricSemantics> METRIC_SEMANTICS = Map.of(
+        "points", MetricSemantics.VOLATILE_SOCIAL,
+        "commentsCount", MetricSemantics.VOLATILE_SOCIAL
+    );
+
     @Override
     public SourceType supportedType() {
         return SourceType.HACKER_NEWS;
+    }
+
+    @Override
+    public Map<String, MetricSemantics> metricSemantics() {
+        return METRIC_SEMANTICS;
     }
 
     @Override

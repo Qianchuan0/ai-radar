@@ -43,14 +43,20 @@ public class HotClusterController {
             @RequestParam(defaultValue = "SCORE_DESC") HotClusterSort sort,
             @RequestParam(required = false) SourceType sourceType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(required = false) String scoringVersion
     ) {
-        return ApiResponse.success(hotClusterQueryService.list(page, size, sort, sourceType, from, to));
+        return ApiResponse.success(
+                hotClusterQueryService.list(page, size, sort, sourceType, from, to, scoringVersion)
+        );
     }
 
     @GetMapping("/{clusterId}")
-    public ApiResponse<HotClusterDetailVO> get(@PathVariable long clusterId) {
-        return ApiResponse.success(hotClusterQueryService.get(clusterId));
+    public ApiResponse<HotClusterDetailVO> get(
+            @PathVariable long clusterId,
+            @RequestParam(required = false) String scoringVersion
+    ) {
+        return ApiResponse.success(hotClusterQueryService.get(clusterId, scoringVersion));
     }
 
     /**

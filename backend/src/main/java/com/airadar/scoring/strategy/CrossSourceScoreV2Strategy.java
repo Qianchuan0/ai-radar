@@ -3,6 +3,9 @@ package com.airadar.scoring.strategy;
 import com.airadar.cluster.entity.HotClusterEntity;
 import com.airadar.cluster.entity.HotClusterItemEntity;
 import com.airadar.cluster.mapper.HotClusterItemMapper;
+import com.airadar.cluster.model.ClusterTrend;
+import com.airadar.cluster.service.ClusterTrendService;
+import com.airadar.cluster.support.UrlCanonicalizer;
 import com.airadar.item.entity.HotItemEntity;
 import com.airadar.item.mapper.HotItemMapper;
 import com.airadar.scoring.calculator.ScoreCalculator;
@@ -13,6 +16,8 @@ import com.airadar.scoring.strategy.model.ScoreComponents;
 import com.airadar.signal.adapter.SourceSignalAdapterRegistry;
 import com.airadar.signal.model.GrowthMetrics;
 import com.airadar.signal.model.NormalizedSignal;
+import com.airadar.signal.model.SourceRole;
+import com.airadar.signal.model.TrendWindow;
 import com.airadar.signal.service.GrowthCalculationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,9 +33,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Cross-source V2 scoring strategy.
@@ -40,6 +48,12 @@ import java.util.Objects;
  * score. Unlike V1's points/comments baseline, V2 separates cumulative scale
  * from current growth velocity, so fast-rising projects are not buried under
  * established ones.
+ *
+ * <p><b>Phase 18B refactor:</b> {@code buildContext} now invokes
+ * {@link ClusterTrendService#aggregate(long, TrendWindow)} with the 24h window
+ * and precomputes source-role groupings + deduped DISCOVERY URLs + earliest
+ * credible event time. Calculators no longer read primary-item data for the
+ * momentum / adoption / discussion / relevance / freshness dimensions.
  *
  * <p>Runs in its own {@code REQUIRES_NEW} transaction so a V2 failure can never
  * roll back the V1 score written by the {@link ScoringOrchestrator}.
@@ -55,6 +69,8 @@ public class CrossSourceScoreV2Strategy implements ClusterScoringStrategy {
     private final HotItemMapper hotItemMapper;
     private final SourceSignalAdapterRegistry adapterRegistry;
     private final GrowthCalculationService growthCalculationService;
+    private final ClusterTrendService clusterTrendService;
+    private final UrlCanonicalizer urlCanonicalizer;
     private final HotScoreMapper hotScoreMapper;
     private final ObjectMapper objectMapper;
 
@@ -64,6 +80,8 @@ public class CrossSourceScoreV2Strategy implements ClusterScoringStrategy {
             HotItemMapper hotItemMapper,
             SourceSignalAdapterRegistry adapterRegistry,
             GrowthCalculationService growthCalculationService,
+            ClusterTrendService clusterTrendService,
+            UrlCanonicalizer urlCanonicalizer,
             HotScoreMapper hotScoreMapper,
             ObjectMapper objectMapper
     ) {
@@ -74,6 +92,8 @@ public class CrossSourceScoreV2Strategy implements ClusterScoringStrategy {
         this.hotItemMapper = hotItemMapper;
         this.adapterRegistry = adapterRegistry;
         this.growthCalculationService = growthCalculationService;
+        this.clusterTrendService = clusterTrendService;
+        this.urlCanonicalizer = urlCanonicalizer;
         this.hotScoreMapper = hotScoreMapper;
         this.objectMapper = objectMapper;
     }
@@ -152,14 +172,121 @@ public class CrossSourceScoreV2Strategy implements ClusterScoringStrategy {
             }
         }
 
+        ClusterTrend clusterTrend = computeClusterTrend(cluster);
+
+        Map<SourceRole, List<HotItemEntity>> itemsByRole = groupItemsByRole(items, signals);
+        Map<SourceRole, List<NormalizedSignal>> signalsByRole = groupSignalsByRole(items, signals);
+        Set<String> dedupedDiscoveryUrls = collectDedupedDiscoveryUrls(items, signals);
+        Instant earliestCredibleEventAt = resolveEarliestCredibleEventAt(cluster, items, signals);
+
         return new ScoringContext(
                 cluster,
                 new ArrayList<>(items),
                 primaryItem,
                 signals,
                 growthByItem,
+                clusterTrend,
+                itemsByRole,
+                signalsByRole,
+                dedupedDiscoveryUrls,
+                earliestCredibleEventAt,
                 Instant.now()
         );
+    }
+
+    private ClusterTrend computeClusterTrend(HotClusterEntity cluster) {
+        try {
+            return clusterTrendService.aggregate(cluster.getId(), TrendWindow.H24);
+        } catch (RuntimeException ex) {
+            log.debug("Cluster trend aggregation skipped for cluster {}: {}",
+                    cluster.getId(), ex.toString());
+            return null;
+        }
+    }
+
+    private Map<SourceRole, List<HotItemEntity>> groupItemsByRole(
+            List<HotItemEntity> items,
+            Map<Long, NormalizedSignal> signals
+    ) {
+        Map<SourceRole, List<HotItemEntity>> groups = new LinkedHashMap<>();
+        for (HotItemEntity item : items) {
+            SourceRole role = resolveRole(item, signals);
+            if (role == null) {
+                continue;
+            }
+            groups.computeIfAbsent(role, key -> new ArrayList<>()).add(item);
+        }
+        return groups;
+    }
+
+    private Map<SourceRole, List<NormalizedSignal>> groupSignalsByRole(
+            List<HotItemEntity> items,
+            Map<Long, NormalizedSignal> signals
+    ) {
+        Map<SourceRole, List<NormalizedSignal>> groups = new LinkedHashMap<>();
+        for (HotItemEntity item : items) {
+            NormalizedSignal signal = signals.get(item.getId());
+            if (signal == null || signal.sourceRole() == null) {
+                continue;
+            }
+            groups.computeIfAbsent(signal.sourceRole(), key -> new ArrayList<>()).add(signal);
+        }
+        return groups;
+    }
+
+    private Set<String> collectDedupedDiscoveryUrls(
+            List<HotItemEntity> items,
+            Map<Long, NormalizedSignal> signals
+    ) {
+        Set<String> urls = new HashSet<>();
+        for (HotItemEntity item : items) {
+            NormalizedSignal signal = signals.get(item.getId());
+            if (signal == null || signal.sourceRole() != SourceRole.DISCOVERY) {
+                continue;
+            }
+            String canonical = urlCanonicalizer.canonicalize(item.getSourceUrl());
+            if (canonical != null && !canonical.isBlank()) {
+                urls.add(canonical);
+            }
+        }
+        return urls;
+    }
+
+    private Instant resolveEarliestCredibleEventAt(
+            HotClusterEntity cluster,
+            List<HotItemEntity> items,
+            Map<Long, NormalizedSignal> signals
+    ) {
+        Instant earliest = null;
+        for (HotItemEntity item : items) {
+            NormalizedSignal signal = signals.get(item.getId());
+            if (signal == null || signal.sourceRole() == SourceRole.DISCOVERY) {
+                // Discovery items are not treated as primary evidence of event time.
+                continue;
+            }
+            Instant publishedAt = item.getPublishedAt();
+            if (publishedAt == null) {
+                continue;
+            }
+            if (earliest == null || publishedAt.isBefore(earliest)) {
+                earliest = publishedAt;
+            }
+        }
+        if (earliest != null) {
+            return earliest;
+        }
+        return cluster.getFirstSeenAt();
+    }
+
+    private SourceRole resolveRole(HotItemEntity item, Map<Long, NormalizedSignal> signals) {
+        NormalizedSignal signal = signals.get(item.getId());
+        if (signal != null && signal.sourceRole() != null) {
+            return signal.sourceRole();
+        }
+        if (item.getSourceType() == null) {
+            return null;
+        }
+        return SourceRole.fromSourceType(item.getSourceType());
     }
 
     private HotItemEntity resolvePrimary(

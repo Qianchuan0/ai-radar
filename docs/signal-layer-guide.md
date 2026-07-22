@@ -205,3 +205,137 @@ Expected:
 - Focused Phase 14 tests pass without changing V1 scoring behavior
 - SourceSignalAdapterRegistry successfully registers all current adapters
 - No duplicate adapter exceptions at startup
+
+## Phase 18A: Multi-Window Cluster Trend Model
+
+Phase 18A upgrades Phase 14's single-window 24h delta into a multi-window, source-aware, cluster-level trend layer.
+
+### Multi-Window Support
+
+`com.airadar.signal.model.TrendWindow` defines four canonical windows:
+
+| Window | Code | Target | Max Deviation | HIGH Confidence | MEDIUM Confidence |
+| --- | --- | --- | --- | --- | --- |
+| `H1` | `1h` | 1 hour | 15 minutes | 5 minutes | 10 minutes |
+| `H6` | `6h` | 6 hours | 60 minutes | 20 minutes | 40 minutes |
+| `H24` | `24h` | 24 hours | 3 hours | 30 minutes | 90 minutes |
+| `D3` | `3d` | 72 hours | 12 hours | 3 hours | 6 hours |
+
+The `24h` wire form is preserved verbatim from Phase 14 rather than collapsing to `1d`, so persisted `window` fields and existing API callers keep matching. Windows strictly longer than 24h collapse to a day-count form (`72h -> "3d"`).
+
+### Source-Specific Metric Semantics
+
+`com.airadar.signal.model.MetricSemantics` classifies how each raw metric field is allowed to move:
+
+- **MONOTONIC_CUMULATIVE** — GitHub stars, forks, watchers; Hugging Face downloads, likes; arXiv author/category counts. A drop is a real anomaly (measurement or pipeline regression) and flags `METRIC_RESET`.
+- **RANK_LIKE_REVERSIBLE** — Search rank (Bing, DuckDuckGo, Sogou), Weibo hot-search rank. Movement is informational and never triggers a reset on its own.
+- **VOLATILE_SOCIAL** — Hacker News points/comments, Twitter engagement, Weibo hot score, GitHub open-issues. Free to move in either direction with attention cycles.
+- **RELEVANCE_SCORE** — Search `totalCount`, Sogou provider score. Informational only; excluded from the weighted growth rate.
+
+Each adapter declares its semantics through `SourceSignalAdapter.metricSemantics()`, which returns an empty map by default so pre-Phase 18A adapters continue to behave exactly as before.
+
+### RawMetricDelta
+
+`com.airadar.signal.model.RawMetricDelta` carries the previous/current/delta/growthRate/anomaly for each raw metric field, preserving the original field name (e.g. `stargazersCount`, `rank`) so downstream consumers can interpret movement using the correct semantics.
+
+### TrendMetrics
+
+`com.airadar.signal.model.TrendMetrics` extends Phase 14 `GrowthMetrics` with:
+
+- `rawMetricDeltas` — per-field source-aware deltas
+- `growthRate` — weighted relative growth across raw deltas, using semantics as weights (`MONOTONIC_CUMULATIVE` weight 1.0, `VOLATILE_SOCIAL` 0.6, `RANK_LIKE_REVERSIBLE` 0.3, `RELEVANCE_SCORE` excluded)
+- `velocity` — first derivative proxy, expressed as the normalized momentum delta itself (signed)
+- `acceleration` — second derivative proxy: difference between the current window's momentum and the previous equal-sized window's momentum. Requires a third snapshot at `current - 2*window`; returns `null` when unavailable so callers cannot mistake absence for zero.
+
+The original 24h growth endpoint keeps returning `GrowthMetrics` so Phase 15 V2 momentum consumers continue to work unchanged.
+
+### Cluster Trend Aggregation
+
+`com.airadar.cluster.service.ClusterTrendService` aggregates per-item `TrendMetrics` into a single `ClusterTrend` per window:
+
+1. Loads active cluster items via `HotClusterItemMapper`.
+2. De-duplicates DISCOVERY sources that resolve to the same canonical URL via `UrlCanonicalizer`. The discovery item with the lowest rank wins; non-discovery items are always kept.
+3. Computes `TrendMetrics` for each surviving item.
+4. Skips items whose confidence is `UNKNOWN` or `DATA_ANOMALY` (collected in `skippedItems`).
+5. Aggregates: average `momentumScore`, weakest `confidence`, summed raw deltas per metric, summed normalized deltas per component, weighted average `growthRate`, average `acceleration`.
+
+### Cluster Trend State
+
+`com.airadar.cluster.model.ClusterTrendState` is derived from the signed sum of normalized deltas plus acceleration (not from `momentumScore`, which is always 0..100 and cannot represent cooling):
+
+| State | Condition |
+| --- | --- |
+| `NEW` | All items skipped but at least one active item exists (historical baseline missing) |
+| `RISING` | Signed delta > 5 AND acceleration >= 0 |
+| `PEAKING` | Signed delta > 5 AND acceleration < 0 |
+| `STABLE` | Signed delta in [-5, +5] |
+| `COOLING` | Signed delta < -5 |
+| `UNKNOWN` | Confidence is `UNKNOWN` or `DATA_ANOMALY`, or cluster has no active items |
+
+### Phase 18A API Endpoints
+
+- `GET /api/v1/hot-items/{id}/trends?window=6h` — returns `TrendMetricsVO` with raw deltas, growth rate, velocity, acceleration
+- `GET /api/v1/hot-clusters/{id}/trends?windows=1h,6h,24h,3d` — returns `List<ClusterTrendVO>`, one per requested window
+
+### Phase 18A Scope Boundaries
+
+- No Score V2 ranking change (Phase 15 shadow scoring continues to read Phase 14 `GrowthMetrics`)
+- No frontend trend visualization (reserved for Phase 19A)
+- No time-series database, streaming compute, or full historical backfill
+- No cluster trend cache table — the first version computes trends live; a cache table is reserved for a later phase if query cost forces it
+
+## Verification (Phase 18A)
+
+```bash
+cd backend
+./mvnw.cmd -Dtest=GrowthCalculationServiceTest,ClusterTrendServiceTest,SourceSignalAdapterTest test
+```
+
+For the Testcontainers-backed integration tests (requires Docker):
+
+```bash
+cd backend
+./mvnw.cmd -Dtest=ClusterTrendControllerIntegrationTest,HotItemSignalControllerIntegrationTest test
+```
+
+Or run the acceptance script from the repo root:
+
+```powershell
+.\scripts\accept-phase-18a.ps1
+```
+
+## Phase 18B: Score V2 Online Ranking Adoption
+
+Phase 18B rewires the V2 calculators to consume cluster-level signal inputs instead of primary-item data, so events with multiple evidence items are no longer undercounted when none of them happens to be the primary item. The Phase 18A `ClusterTrend` (24h window) drives momentum; `ADOPTION` / `COMMUNITY` / `DISCOVERY` source-role signal groups drive adoption / discussion / relevance; the earliest credible (non-DISCOVERY) `published_at` drives freshness; and precomputed deduplicated DISCOVERY canonical URLs drive evidence diversity.
+
+### Online Version Switch
+
+`ScoringStrategyProperties` (`ai-radar.scoring.online-version`) selects which scoring version drives the list / detail / alert / report ranking:
+
+- `hn-score-v1` (default): V1 ranking, V2 stays shadow
+- `cross-source-score-v2`: V2 ranking with V1 fallback when a V2 row is missing
+
+The `/api/v1/hot-clusters` list and `/api/v1/hot-clusters/{id}` detail endpoints also accept an optional `?scoringVersion=` query parameter for V1/V2 side-by-side comparison without changing the global config. `GET /api/v1/scoring-strategy/status` returns the live online version, shadow version, v2-online flag, and rollout stage.
+
+### Verification
+
+Phase 18B unit tests (no Docker):
+
+```bash
+cd backend
+./mvnw.cmd -Dtest=MomentumScoreCalculatorTest,AdoptionScoreCalculatorTest,DiscussionScoreCalculatorTest,RelevanceScoreCalculatorTest,FreshnessScoreCalculatorTest,EvidenceDiversityCalculatorTest,ScoringStrategyPropertiesTest,V1V2ComparisonTest,ScoringOrchestratorShadowTest test
+```
+
+Phase 18B integration tests (requires Docker):
+
+```bash
+cd backend
+./mvnw.cmd -Dtest=ScoreV2OnlineRankingIntegrationTest test
+```
+
+Or run the acceptance script from the repo root:
+
+```powershell
+.\scripts\accept-phase-18b.ps1
+```
+`

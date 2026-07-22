@@ -363,7 +363,7 @@
 
 ## Phase 14: Signal Snapshot and Growth Trend Calculation
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -402,7 +402,7 @@
 
 ## Phase 15: Cross-Source Score V2 Shadow
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -523,7 +523,7 @@
 
 ## Phase 17B: Cluster Governance Before V2 Online Writes
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -565,7 +565,7 @@
 
 ## Phase 17C: Event Cluster V2 Gradual Online Adoption
 
-**Status:** In Progress
+**Status:** Completed
 
 ### Goals
 
@@ -624,3 +624,94 @@
 - No full-table historical re-cluster
 - No automatic acceptance of REVIEW_REQUIRED decisions
 - No promotion of `strategy=event-rule-v2` (still rejected at startup)
+
+## Phase 18A: Cluster-Level Trend Model
+
+**Status:** Completed
+
+### Goals
+
+- upgrade the Phase 14 item-level 24h delta into a cluster-level multi-window trend
+- emit source-aware raw metric deltas so cumulative counters, search rank, and volatile social signals are interpreted by the correct semantics instead of a single coarse `METRIC_RESET` flag
+- aggregate per-item trends into a cluster trend with explainable state
+- keep the Phase 14 `/trend?window=24h` endpoint and V2 momentum consumer behavior unchanged
+
+### Deliverables
+
+- `TrendWindow` enum supporting `1h`, `6h`, `24h`, `3d` with per-window confidence tolerances
+- `MetricSemantics` enum (`MONOTONIC_CUMULATIVE`, `RANK_LIKE_REVERSIBLE`, `VOLATILE_SOCIAL`, `RELEVANCE_SCORE`)
+- `RawMetricDelta` model carrying previous/current/delta/growthRate/anomaly per metric field
+- `TrendMetrics` model extending Phase 14 growth with raw deltas, growth rate, velocity, and acceleration
+- `ClusterTrend` + `ClusterTrendState` models for aggregated cluster trend state
+- `SourceSignalAdapter.metricSemantics()` default method, implemented by every existing adapter
+- `SourceRole.fromSourceType(SourceType)` static mapping used by cluster aggregation
+- `GrowthCalculationService.calculateTrend(hotItemId, TrendWindow)` multi-window path
+- `ClusterTrendService` with discovery-source canonical URL dedup and per-item aggregation
+- `ClusterTrendController` exposing `GET /api/v1/hot-clusters/{id}/trends?windows=1h,6h,24h,3d`
+- `HotItemSignalController` exposing `GET /api/v1/hot-items/{id}/trends?window=6h`
+- VOs: `TrendMetricsVO`, `RawMetricDeltaVO`, `ClusterTrendVO`
+- Unit tests: `GrowthCalculationServiceTest`, `ClusterTrendServiceTest`, `SourceSignalAdapterTest`
+- Integration tests: `HotItemSignalControllerIntegrationTest`, `ClusterTrendControllerIntegrationTest`
+- `scripts/accept-phase-18a.ps1`
+- documentation sync: roadmap, decision log, signal layer guide
+
+### Scope
+
+**Included in Phase 18A:**
+- Multi-window trend calculation (1h, 6h, 24h, 3d) with source-aware raw deltas
+- Cluster trend aggregation with discovery-source canonical URL dedup
+- Cluster trend state derived from signed normalized deltas + acceleration
+- Acceleration proxy computed when a third snapshot at `current - 2*window` exists
+- `METRIC_RESET` only triggers for `MONOTONIC_CUMULATIVE` drops; rank/social movement is informational
+
+**Explicitly NOT in Phase 18A:**
+- No switching of Score V2 ranking (Phase 15 shadow stays as-is)
+- No frontend trend visualization (deferred to Phase 19A)
+- No time-series database, no streaming compute, no full historical backfill
+- No cluster trend cache table (first version computes live; cache table reserved for a later phase if query cost forces it)
+- No change to Phase 14 `GrowthMetrics` shape or `/trend?window=24h` wire contract
+
+## Phase 18B: Score V2 Online Ranking Adoption
+
+**Status:** Completed
+
+### Goals
+
+- promote Score V2 from a shadow-only score to a controllable online ranking capability
+- refit V2 scoring inputs to use cluster-level multi-source trend, instead of primary-item growth
+- keep V1 as the conservative default; allow operators to opt into V2 via property or per-request override
+- ensure V2 failure never removes ranking (V1 fallback)
+
+### Deliverables
+
+- `ScoringStrategyProperties` + `ai-radar.scoring.online-version` configuration (default `hn-score-v1`, supports `cross-source-score-v2`)
+- `ScoringContext` extended with `ClusterTrend` (24h window), role-grouped items / signals, deduped DISCOVERY URLs, earliest credible event time
+- Refactored V2 calculators: `MomentumScoreCalculator`, `AdoptionScoreCalculator`, `DiscussionScoreCalculator`, `RelevanceScoreCalculator`, `FreshnessScoreCalculator`, `EvidenceDiversityCalculator`
+- `HotClusterMapper.selectActivePage` accepts a `scoringVersion` parameter; `HotClusterMapper.xml` uses `#{scoringVersion}` instead of a hardcoded `'hn-score-v1'`
+- `HotClusterController` list + detail endpoints accept an optional `scoringVersion` query parameter
+- `ScoringStrategyController` exposing `GET /api/v1/scoring-strategy/status` (online version, shadow version, v2-online flag, rollout stage)
+- `AlertService` and `DailyReportService` read the configured online scoring version when ranking
+- Unit tests: `ScoringStrategyPropertiesTest`, `AdoptionScoreCalculatorTest`, `DiscussionScoreCalculatorTest`, `RelevanceScoreCalculatorTest`, updated `MomentumScoreCalculatorTest`, `FreshnessScoreCalculatorTest`, `EvidenceDiversityCalculatorTest`, `V1V2ComparisonTest`
+- Integration test: `ScoreV2OnlineRankingIntegrationTest` covering V1 default, V2 override, configured V2 online, V2-fallback-to-V1 detail, status endpoint
+- `scripts/accept-phase-18b.ps1`
+- documentation sync: roadmap, decision log, README
+
+### Scope
+
+**Included in Phase 18B:**
+- V2 momentum reads `ClusterTrend.momentumScore()` instead of `context.primaryGrowth()`
+- V2 adoption / discussion / relevance aggregate signals across all items in the matching source role, not only the primary item
+- V2 freshness uses the earliest credible (non-DISCOVERY) event time, not `primaryItem.publishedAt`
+- V1 default ranking preserved; V2 ranking can be enabled by setting `ai-radar.scoring.online-version=cross-source-score-v2` or passing `?scoringVersion=cross-source-score-v2` per request
+- alert and daily report honor the configured online version
+- V2 failure still rolls back to V1 (shadow swallowing unchanged in `ScoringOrchestrator`)
+- V2 detail-page score falls back to V1 when the cluster has no V2 row
+
+**Explicitly NOT in Phase 18B:**
+- No deletion of `hn-score-v1`
+- No LLM scoring or learned weights
+- No automatic default switch to V2 without maintainer sign-off after V1/V2 comparison
+- No retroactive rewriting of historical `alert_record` / `daily_report` score versions
+- No frontend score-version picker UI (deferred to Phase 19A)
+
+

@@ -27,6 +27,11 @@ ai-radar:
       connect-timeout: ${AI_RADAR_OPENAI_CONNECT_TIMEOUT:5s}
       read-timeout: ${AI_RADAR_OPENAI_READ_TIMEOUT:30s}
       max-attempts: ${AI_RADAR_OPENAI_MAX_ATTEMPTS:2}
+  scoring:
+    # Online scoring version driving list / alert / report ranking.
+    # Supported values: hn-score-v1 (default, conservative), cross-source-score-v2 (Phase 18B).
+    # The shadow version is always persisted alongside so a property flip is enough to roll back.
+    online-version: ${AI_RADAR_SCORING_ONLINE_VERSION:hn-score-v1}
   cluster:
     strategy: ${AI_RADAR_CLUSTER_STRATEGY:hn-rule-v1}
     shadow-strategy: ${AI_RADAR_CLUSTER_SHADOW_STRATEGY:}

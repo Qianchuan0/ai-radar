@@ -13,6 +13,7 @@ import com.airadar.cluster.vo.HotClusterDetailVO;
 import com.airadar.common.api.PageResponse;
 import com.airadar.common.exception.BusinessException;
 import com.airadar.common.exception.ErrorCode;
+import com.airadar.scoring.strategy.ScoringStrategyProperties;
 import com.airadar.report.entity.DailyReportEntity;
 import com.airadar.report.mapper.DailyReportMapper;
 import com.airadar.report.model.ReportStatus;
@@ -47,6 +48,7 @@ public class DailyReportService {
     private final HotClusterMapper hotClusterMapper;
     private final HotClusterQueryService hotClusterQueryService;
     private final ClusterAnalysisMapper clusterAnalysisMapper;
+    private final ScoringStrategyProperties scoringProperties;
     private final ObjectMapper objectMapper;
 
     public DailyReportService(
@@ -54,12 +56,14 @@ public class DailyReportService {
             HotClusterMapper hotClusterMapper,
             HotClusterQueryService hotClusterQueryService,
             ClusterAnalysisMapper clusterAnalysisMapper,
+            ScoringStrategyProperties scoringProperties,
             ObjectMapper objectMapper
     ) {
         this.dailyReportMapper = dailyReportMapper;
         this.hotClusterMapper = hotClusterMapper;
         this.hotClusterQueryService = hotClusterQueryService;
         this.clusterAnalysisMapper = clusterAnalysisMapper;
+        this.scoringProperties = scoringProperties;
         this.objectMapper = objectMapper;
     }
 
@@ -75,6 +79,7 @@ public class DailyReportService {
                 from,
                 to,
                 HotClusterSort.SCORE_DESC.name(),
+                scoringProperties.effectiveOnlineVersion(),
                 TOP_CLUSTER_LIMIT,
                 0
         );

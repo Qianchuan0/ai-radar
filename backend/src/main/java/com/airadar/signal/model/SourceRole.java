@@ -1,5 +1,7 @@
 package com.airadar.signal.model;
 
+import com.airadar.source.model.SourceType;
+
 /**
  * Signal role classification for data sources.
  *
@@ -51,5 +53,28 @@ public enum SourceRole {
      * Examples: Bing, DuckDuckGo, Google, Sogou.
      * Current: BING_SEARCH, DUCKDUCKGO_SEARCH, SOGOU_SEARCH → DISCOVERY
      */
-    DISCOVERY
+    DISCOVERY;
+
+    /**
+     * Maps a {@link SourceType} to its {@link SourceRole}.
+     *
+     * <p>This is the single source of truth for the SourceType → SourceRole mapping
+     * used by both {@code SourceSignalAdapter} implementations and cluster-level
+     * services (Phase 18A) that need to classify items without going through the
+     * adapter registry.
+     *
+     * @param sourceType the source type to classify; {@code null} returns {@code PRIMARY}
+     * @return the semantic role of the source type
+     */
+    public static SourceRole fromSourceType(SourceType sourceType) {
+        if (sourceType == null) {
+            return PRIMARY;
+        }
+        return switch (sourceType) {
+            case GITHUB, HUGGING_FACE -> ADOPTION;
+            case HACKER_NEWS, HACKER_NEWS_SEARCH, WEIBO_HOT_SEARCH, TWITTER -> COMMUNITY;
+            case BING_SEARCH, DUCKDUCKGO_SEARCH, SOGOU_SEARCH -> DISCOVERY;
+            case ARXIV -> PRIMARY;
+        };
+    }
 }

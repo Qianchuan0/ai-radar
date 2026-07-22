@@ -1,16 +1,17 @@
 package com.airadar.scoring.calculator;
 
 import com.airadar.cluster.entity.HotClusterEntity;
-import com.airadar.item.entity.HotItemEntity;
+import com.airadar.cluster.model.ClusterTrend;
+import com.airadar.cluster.model.ClusterTrendState;
 import com.airadar.scoring.strategy.ScoringContext;
 import com.airadar.scoring.strategy.model.ScoreComponent;
 import com.airadar.signal.model.GrowthConfidence;
-import com.airadar.signal.model.GrowthMetrics;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,10 +21,8 @@ class MomentumScoreCalculatorTest {
 
     @Test
     void compute_withHighConfidence_keepsFullScore() {
-        HotItemEntity primary = primaryItem(1L);
-        GrowthMetrics growth = new GrowthMetrics(
-                1L, "24h", 30.0, 6.0, 60.0, 0.0, null, 80.0, GrowthConfidence.HIGH);
-        ScoringContext context = context(primary, Map.of(1L, growth));
+        ClusterTrend trend = trend(80.0, GrowthConfidence.HIGH);
+        ScoringContext context = context(trend);
 
         ScoreComponent result = calculator.compute(context);
 
@@ -35,10 +34,8 @@ class MomentumScoreCalculatorTest {
 
     @Test
     void compute_withUnknownConfidence_attenuatesScore() {
-        HotItemEntity primary = primaryItem(1L);
-        GrowthMetrics growth = new GrowthMetrics(
-                1L, "24h", 30.0, 6.0, 60.0, 0.0, null, 80.0, GrowthConfidence.UNKNOWN);
-        ScoringContext context = context(primary, Map.of(1L, growth));
+        ClusterTrend trend = trend(80.0, GrowthConfidence.UNKNOWN);
+        ScoringContext context = context(trend);
 
         ScoreComponent result = calculator.compute(context);
 
@@ -48,10 +45,11 @@ class MomentumScoreCalculatorTest {
 
     @Test
     void compute_withNullMomentum_returnsLowBaseline() {
-        HotItemEntity primary = primaryItem(1L);
-        GrowthMetrics growth = new GrowthMetrics(
-                1L, "24h", null, null, null, null, null, null, GrowthConfidence.UNKNOWN);
-        ScoringContext context = context(primary, Map.of(1L, growth));
+        ClusterTrend trend = new ClusterTrend(
+                1L, "24h", ClusterTrendState.UNKNOWN, null, GrowthConfidence.UNKNOWN,
+                List.of(), Map.of(), null, null, List.of(), List.of(),
+                Instant.parse("2026-07-17T12:00:00Z"));
+        ScoringContext context = context(trend);
 
         ScoreComponent result = calculator.compute(context);
 
@@ -59,29 +57,34 @@ class MomentumScoreCalculatorTest {
     }
 
     @Test
-    void compute_withoutGrowthData_returnsLowBaseline() {
-        HotItemEntity primary = primaryItem(1L);
-        ScoringContext context = context(primary, Map.of());
+    void compute_withoutTrend_returnsLowBaseline() {
+        ScoringContext context = context(null);
 
         ScoreComponent result = calculator.compute(context);
 
         assertThat(result.score()).isEqualTo(10.0);
-        assertThat(result.reasons()).contains("no_growth_data_for_primary_item");
+        assertThat(result.reasons()).contains("no_cluster_trend");
     }
 
-    private HotItemEntity primaryItem(long id) {
-        HotItemEntity item = new HotItemEntity();
-        item.setId(id);
-        return item;
+    private ClusterTrend trend(double momentum, GrowthConfidence confidence) {
+        return new ClusterTrend(
+                1L, "24h", ClusterTrendState.STABLE, momentum, confidence,
+                List.of(), Map.of(), 0.1, 0.0, List.of(1L), List.of(),
+                Instant.parse("2026-07-17T12:00:00Z"));
     }
 
-    private ScoringContext context(HotItemEntity primary, Map<Long, GrowthMetrics> growth) {
+    private ScoringContext context(ClusterTrend trend) {
         return new ScoringContext(
                 new HotClusterEntity(),
-                List.of(primary),
-                primary,
+                List.of(),
+                null,
                 Map.of(),
-                growth,
+                Map.of(),
+                trend,
+                Map.of(),
+                Map.of(),
+                Set.of(),
+                Instant.parse("2026-07-17T12:00:00Z"),
                 Instant.parse("2026-07-17T12:00:00Z")
         );
     }

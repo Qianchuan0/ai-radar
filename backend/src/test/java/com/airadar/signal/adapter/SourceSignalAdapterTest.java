@@ -1,6 +1,7 @@
 package com.airadar.signal.adapter;
 
 import com.airadar.item.entity.HotItemEntity;
+import com.airadar.signal.model.MetricSemantics;
 import com.airadar.signal.model.NormalizedSignal;
 import com.airadar.signal.model.SourceRole;
 import com.airadar.source.model.SourceType;
@@ -191,6 +192,49 @@ class SourceSignalAdapterTest {
         assertThat(signal.sourceRole()).isEqualTo(SourceRole.COMMUNITY);
         assertThat(signal.attention()).isGreaterThan(0.0);
         assertThat(signal.discussion()).isGreaterThan(0.0);
+    }
+
+    @Test
+    void adaptersShouldDeclarePhase18aMetricSemantics() {
+        // Phase 18A: each adapter declares source-specific metric semantics so the
+        // trend layer can distinguish expected movement from real anomalies.
+        assertThat(new GitHubSignalAdapter().metricSemantics())
+            .containsEntry("stargazersCount", MetricSemantics.MONOTONIC_CUMULATIVE)
+            .containsEntry("forksCount", MetricSemantics.MONOTONIC_CUMULATIVE)
+            .containsEntry("watchersCount", MetricSemantics.MONOTONIC_CUMULATIVE)
+            .containsEntry("openIssuesCount", MetricSemantics.VOLATILE_SOCIAL);
+
+        assertThat(new HuggingFaceSignalAdapter().metricSemantics())
+            .containsEntry("downloads", MetricSemantics.MONOTONIC_CUMULATIVE)
+            .containsEntry("likes", MetricSemantics.MONOTONIC_CUMULATIVE);
+
+        assertThat(new ArxivSignalAdapter().metricSemantics())
+            .containsEntry("authorsCount", MetricSemantics.MONOTONIC_CUMULATIVE)
+            .containsEntry("categoriesCount", MetricSemantics.MONOTONIC_CUMULATIVE);
+
+        assertThat(new HackerNewsSignalAdapter().metricSemantics())
+            .containsEntry("points", MetricSemantics.VOLATILE_SOCIAL)
+            .containsEntry("commentsCount", MetricSemantics.VOLATILE_SOCIAL);
+
+        assertThat(new HackerNewsSearchSignalAdapter().metricSemantics())
+            .containsEntry("points", MetricSemantics.VOLATILE_SOCIAL);
+
+        assertThat(new TwitterSignalAdapter().metricSemantics())
+            .containsEntry("likeCount", MetricSemantics.VOLATILE_SOCIAL)
+            .containsEntry("viewCount", MetricSemantics.VOLATILE_SOCIAL);
+
+        assertThat(new WeiboHotSearchSignalAdapter().metricSemantics())
+            .containsEntry("points", MetricSemantics.VOLATILE_SOCIAL)
+            .containsEntry("rank", MetricSemantics.RANK_LIKE_REVERSIBLE);
+
+        // Search adapters treat rank as reversible and totalCount/score as informational.
+        assertThat(new SearchSignalAdapter().metricSemantics())
+            .containsEntry("rank", MetricSemantics.RANK_LIKE_REVERSIBLE)
+            .containsEntry("totalCount", MetricSemantics.RELEVANCE_SCORE);
+        assertThat(new DuckDuckGoSearchSignalAdapter().metricSemantics())
+            .containsEntry("rank", MetricSemantics.RANK_LIKE_REVERSIBLE);
+        assertThat(new SogouSearchSignalAdapter().metricSemantics())
+            .containsEntry("rank", MetricSemantics.RANK_LIKE_REVERSIBLE);
     }
 
     private static HotItemEntity hotItem(SourceType sourceType, JsonNode metrics) {

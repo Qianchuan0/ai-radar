@@ -1,6 +1,8 @@
 package com.airadar.scoring;
 
 import com.airadar.cluster.entity.HotClusterEntity;
+import com.airadar.cluster.model.ClusterTrend;
+import com.airadar.cluster.model.ClusterTrendState;
 import com.airadar.cluster.support.UrlCanonicalizer;
 import com.airadar.item.entity.HotItemEntity;
 import com.airadar.scoring.calculator.AdoptionScoreCalculator;
@@ -14,7 +16,6 @@ import com.airadar.scoring.calculator.ScoreCalculator;
 import com.airadar.scoring.strategy.ScoringContext;
 import com.airadar.scoring.strategy.model.ScoreComponent;
 import com.airadar.signal.model.GrowthConfidence;
-import com.airadar.signal.model.GrowthMetrics;
 import com.airadar.signal.model.NormalizedSignal;
 import com.airadar.signal.model.SourceRole;
 import com.airadar.source.model.SourceType;
@@ -23,16 +24,18 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Verifies the V2 score separates cumulative scale from current growth.
+ * Verifies the Phase 18B V2 score separates cumulative scale from current growth.
  *
- * <p>Case A is an established GitHub project with massive adoption but no
- * recent momentum. Case B is a brand-new project with modest adoption but
- * explosive growth. The V2 momentum dimension must rank B above A, even though
- * A has far higher adoption.
+ * <p>Case A is an established GitHub project with massive adoption but flat
+ * momentum (cluster trend reports low momentum with UNKNOWN confidence, which
+ * attenuates heavily). Case B is a brand-new project with modest adoption but
+ * explosive momentum. The V2 momentum dimension must rank B above A, even
+ * though A has far higher adoption.
  */
 class V1V2ComparisonTest {
 
@@ -53,9 +56,9 @@ class V1V2ComparisonTest {
         double adoptionA = score("adoption", caseA);
         double momentumA = score("momentum", caseA);
 
-        // Established project: high adoption, low momentum
+        // Established project: high adoption, low momentum (UNKNOWN attenuates heavily)
         assertThat(adoptionA).isGreaterThan(70.0);
-        assertThat(momentumA).isLessThanOrEqualTo(30.0); // UNKNOWN confidence attenuates heavily
+        assertThat(momentumA).isLessThanOrEqualTo(30.0);
     }
 
     @Test
@@ -92,33 +95,55 @@ class V1V2ComparisonTest {
     }
 
     private double adoption100k() {
-        // Case A's adoption score baseline (100k stars normalized)
         return score("adoption", buildCaseA());
     }
 
     private ScoringContext buildCaseA() {
-        HotItemEntity primary = item(1L, Instant.parse("2026-07-15T00:00:00Z"));
-        NormalizedSignal signal = new NormalizedSignal(
+        // Established project: massive adoption, flat momentum
+        HotItemEntity github = item(1L, Instant.parse("2026-07-15T00:00:00Z"));
+        NormalizedSignal githubSignal = new NormalizedSignal(
                 SourceType.GITHUB, SourceRole.ADOPTION,
                 80.0, 20.0, 90.0, 60.0, 50.0, null, null);
-        GrowthMetrics growth = new GrowthMetrics(
-                1L, "24h", 2.0, 1.0, 5.0, 0.0, null, 20.0, GrowthConfidence.UNKNOWN);
+        ClusterTrend flatTrend = trend(20.0, GrowthConfidence.UNKNOWN);
         return new ScoringContext(
-                new HotClusterEntity(), List.of(primary), primary,
-                Map.of(1L, signal), Map.of(1L, growth),
+                new HotClusterEntity(),
+                List.of(github),
+                github,
+                Map.of(1L, githubSignal),
+                Map.of(),
+                flatTrend,
+                Map.of(SourceRole.ADOPTION, List.of(github)),
+                Map.of(SourceRole.ADOPTION, List.of(githubSignal)),
+                Set.of(),
+                Instant.parse("2026-07-15T00:00:00Z"),
                 Instant.parse("2026-07-17T12:00:00Z"));
     }
 
     private ScoringContext buildCaseB() {
-        HotItemEntity primary = item(2L, Instant.parse("2026-07-17T06:00:00Z"));
-        NormalizedSignal signal = new NormalizedSignal(
+        // New project: modest adoption, explosive momentum
+        HotItemEntity github = item(2L, Instant.parse("2026-07-17T06:00:00Z"));
+        NormalizedSignal githubSignal = new NormalizedSignal(
                 SourceType.GITHUB, SourceRole.ADOPTION,
                 30.0, 40.0, 35.0, 60.0, 50.0, null, null);
-        GrowthMetrics growth = new GrowthMetrics(
-                2L, "24h", 40.0, 30.0, 50.0, 0.0, null, 90.0, GrowthConfidence.HIGH);
+        ClusterTrend risingTrend = trend(95.0, GrowthConfidence.HIGH);
         return new ScoringContext(
-                new HotClusterEntity(), List.of(primary), primary,
-                Map.of(2L, signal), Map.of(2L, growth),
+                new HotClusterEntity(),
+                List.of(github),
+                github,
+                Map.of(2L, githubSignal),
+                Map.of(),
+                risingTrend,
+                Map.of(SourceRole.ADOPTION, List.of(github)),
+                Map.of(SourceRole.ADOPTION, List.of(githubSignal)),
+                Set.of(),
+                Instant.parse("2026-07-17T06:00:00Z"),
+                Instant.parse("2026-07-17T12:00:00Z"));
+    }
+
+    private ClusterTrend trend(double momentum, GrowthConfidence confidence) {
+        return new ClusterTrend(
+                1L, "24h", ClusterTrendState.STABLE, momentum, confidence,
+                List.of(), Map.of(), 0.1, 0.0, List.of(1L), List.of(),
                 Instant.parse("2026-07-17T12:00:00Z"));
     }
 
